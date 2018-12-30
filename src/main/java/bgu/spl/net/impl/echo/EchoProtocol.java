@@ -10,6 +10,9 @@ public class EchoProtocol implements MessagingProtocol<String> {
     @Override
     public String process(String msg) {
         shouldTerminate = "bye".equals(msg);
+        if("broad".equals(msg)){
+
+        }
         System.out.println("[" + LocalDateTime.now() + "]: " + msg);
         return createEcho(msg);
     }

@@ -35,17 +35,14 @@ public class TPCServer extends BaseServer {
 
             int i = 0;
             while (!Thread.currentThread().isInterrupted()) {
-
                 Socket clientSock = serverSock.accept();
-
-
                 ConnectionHandlerTPC handler = new ConnectionHandlerTPC(
                         "LALA" + i,
                         "lala" +i,
                         clientSock,
                         (MessageEncoderDecoder) getEncdecFactory().get(),
                         (MessagingProtocol)getProtocolFactory().get());
-
+                i++;
                 executeByInterface(handler);
             }
         } catch (IOException ex) {
@@ -63,7 +60,7 @@ public class TPCServer extends BaseServer {
     protected void executeByInterface(ConnectionHandler handler){
         connections.add( handler ,clientId);
         clientId++;
-        new Thread().start();
+        new Thread((ConnectionHandlerTPC)handler).start();
     }
 }
 /*/*With T
