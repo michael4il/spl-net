@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class EchoClient {
 
     public static void main(String[] args) throws IOException {
 
         if (args.length == 0) {
-            args = new String[]{"localhost", "hello"};
+            args = new String[]{"localhost", "byebye"};
         }
 
         if (args.length < 2) {
@@ -26,7 +27,9 @@ public class EchoClient {
                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()))) {
 
             System.out.println("sending message to server");
-            out.write(args[1]);
+            Scanner scan = new Scanner(System.in);
+            String s = scan.next();
+            out.write(s);
             out.newLine();
             out.flush();
 
