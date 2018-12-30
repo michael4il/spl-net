@@ -2,6 +2,7 @@ package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.api.bidi.ConnectionHandler;
 
 import java.util.function.Supplier;
 
@@ -18,6 +19,11 @@ public class SingleThreadedServer extends BaseServer {
     @Override
     protected void execute(BlockingConnectionHandler handler) {
         handler.run();
+
+    }
+
+    @Override
+    protected void executeByInterface(ConnectionHandler handler) {
 
     }
 

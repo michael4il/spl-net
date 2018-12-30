@@ -1,7 +1,5 @@
 package bgu.spl.net.api.bidi;
 
-import java.io.IOException;
-
 public interface Connections<T> {
 
     boolean send(int connectionId, T msg);
@@ -11,5 +9,5 @@ public interface Connections<T> {
     void disconnect(int connectionId);
 
     /*We add*/
-    void add(T toAdd);
+    void add(ConnectionHandler handlerToAdd, int id);
 }

@@ -2,6 +2,8 @@ package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.api.bidi.ConnectionHandler;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -57,4 +59,24 @@ public abstract class BaseServer<T> implements Server<T> {
 
     protected abstract void execute(BlockingConnectionHandler<T>  handler);
 
+    /*We Add*/
+    protected void executeByInterface(ConnectionHandler<T> handler){
+        System.out.println("ExecuteByInterface came from the BaseServer");
+    };
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setSock(ServerSocket sock) {
+        this.sock = sock;
+    }
+
+    public Supplier<MessageEncoderDecoder<T>> getEncdecFactory() {
+        return encdecFactory;
+    }
+
+    public Supplier<MessagingProtocol<T>> getProtocolFactory() {
+        return protocolFactory;
+    }
 }
