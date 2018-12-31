@@ -1,5 +1,7 @@
 package bgu.spl.net.api.Messages;
 
+import bgu.spl.net.api.Messages.Message;
+
 public class PM extends Message {
     private String username;
     private String content;

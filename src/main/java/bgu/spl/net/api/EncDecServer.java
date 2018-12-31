@@ -1,6 +1,11 @@
 package bgu.spl.net.api;
 
 import bgu.spl.net.api.Messages.*;
+import bgu.spl.net.api.Messages.ServerToClient.Ack.Ack;
+import bgu.spl.net.api.Messages.ServerToClient.Ack.AckFollowUserlist;
+import bgu.spl.net.api.Messages.ServerToClient.Ack.AckStat;
+import bgu.spl.net.api.Messages.ServerToClient.ErrorMsg;
+import bgu.spl.net.api.Messages.ServerToClient.Notification;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -14,11 +19,21 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     private String s1;
     private String s2;
     private boolean follow = false;
-    private boolean pmTruePostFalse = false;
-    private short numOfUsers;
+    private short numOfUsers = 0;
     private short userWeSaw = 0;
     private int timesInCase = 0;
     private boolean readingOpcode = true;
+
+
+    private void init(){
+         numOfZero = 0;
+         follow = false;
+         numOfUsers = 0;
+         userWeSaw = 0;
+         timesInCase = 0;
+         //Make it false to go to switch.
+         readingOpcode = false;
+    }
 
     @Override
     public Message decodeNextByte(byte nextByte) {
@@ -26,10 +41,11 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         //this allow us to do the following comparison
 
         if (readingOpcode) {
-            pushByte(nextByte);
             if (nextByte == '\n') {
                 opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 1));//Read the first 2 bytes - they are the opcode.
-                numOfZero = 0;
+                init();
+            }else {
+                pushByte(nextByte);
             }
         } else {
             switch (opcode) {
@@ -48,10 +64,9 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                             return msg;
                         }
                     }
-                }
-                pushByte(nextByte);
-                break;
-                case 2: {
+                    pushByte(nextByte);
+                    break;
+                }case 2: {
                     if (nextByte == '\n') {
                         if (numOfZero == 0) {
                             s1 = popString();//s1 is the username
@@ -131,6 +146,166 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     }
                     break;
                 }
+                /*
+                //The Notification -ACK -Error not need to be decoded.
+                */
+            }
+        }
+        return msg;
+    }
+
+
+    public short bytesToShort(byte[] byteArr)
+    {
+        short result = (short)((byteArr[0] & 0xff) << 8);
+        result += (short)(byteArr[1] & 0xff);
+        return result;
+    }
+    public byte[] shortToBytes(short num)
+    {
+        byte[] bytesArr = new byte[2];
+        bytesArr[0] = (byte)((num >> 8) & 0xFF);
+        bytesArr[1] = (byte)(num & 0xFF);
+        return bytesArr;
+    }
+    private String makeWhitespaces(String[] strings){
+        //code from Stack Over Flow
+        //from username BalusC
+        StringBuilder builder = new StringBuilder();
+        for (String string : strings) {
+            if (builder.length() > 0) {
+                builder.append(" ");
+            }
+            builder.append(string);
+        }
+        return builder.toString();
+    }
+
+    //~~~~~~~~~~Ack~~~~~~~~~~~~~~~
+    private byte[] encodeFollowUserlist(AckFollowUserlist ackFollowUserlist){
+        byte[] encodedBytes = encodeAck(ackFollowUserlist);
+        String listOfUsers = makeWhitespaces(ackFollowUserlist.getUserNameList());
+        int i = 4;// Starts from 4 because the first 4 bytes used by Ack
+        System.arraycopy(shortToBytes(ackFollowUserlist.getNumOfUsers()),0,encodedBytes,i,2);//The next 2 bytes are numOfUsers.
+        i += 2;
+        System.arraycopy(listOfUsers.getBytes(),0,encodedBytes,i,listOfUsers.getBytes().length);//The rest of the message
+        i += listOfUsers.getBytes().length;
+        byte[] encodedToSend = new byte[i];
+        System.arraycopy(encodedBytes,0,encodedToSend,0,i);
+        return encodedToSend;
+    }
+    private byte[] encodeStat(AckStat ackStat){
+        byte[] encodedBytes = encodeAck(ackStat);
+        int i = 4;// Starts from 4 because the first 4 bytes used by Ack
+
+        System.arraycopy(shortToBytes(ackStat.getNumOfPosts()),0,encodedBytes,i,2);//The next 2 bytes are numOfUsers.
+        i += 2;
+        System.arraycopy(shortToBytes(ackStat.getNumOfFollowers()),0,encodedBytes,i,2);
+        i += 2;
+        System.arraycopy(shortToBytes(ackStat.getNumOfFollowing()),0,encodedBytes,i,2);
+        i += 2;
+        byte[] encodedToSend = new byte[i];
+        System.arraycopy(encodedBytes,0,encodedToSend,0,i);
+        return encodedToSend;
+    }
+
+    private byte[] encodeAck(Ack ack){
+        byte[] encodedBytes = new byte[1 << 10];
+        int i =0;
+        System.arraycopy(shortToBytes(ack.getOpcode()),0,encodedBytes,i,2);
+        i += 2;
+        System.arraycopy(shortToBytes(ack.getOpcodeRespose()),0,encodedBytes,i,2);
+        i +=2;
+        byte[] encodedToSend = new byte[i];
+        System.arraycopy(encodedBytes,0,encodedToSend,0,i);
+        return encodedToSend;
+    }
+    //~~~~~~~~~Notification~~~~~~~~~~
+    private byte[] encodeNoti(Notification notification){
+        byte[] encodedBytes = new byte[1 << 10];
+        int i =0;
+        System.arraycopy(shortToBytes(notification.getOpcode()),0,encodedBytes,i,2);//The first 2 bytes of encodedBytes are the encoding of the opcode.
+        //I hope it would be fine
+        //CASTING CHAR INTO BYTE: NEED TO BE OK *********
+        i = i+2;
+        encodedBytes[i] = (byte)notification.getPMorPost();
+        i++;
+        //PostingUser
+        byte[] postingUserBytes = notification.getPostingUser().getBytes();
+        System.arraycopy(postingUserBytes,0,encodedBytes,i,postingUserBytes.length);
+        i+=postingUserBytes.length;
+        byte b = 0;
+        char c = '\n';
+        encodedBytes[i] = (byte)c;
+        if(b != (byte)'\n')
+            System.out.println("WR: byte of 0 isn't char /n");
+        byte[] contentInByets = notification.getContent().getBytes();
+        System.arraycopy(contentInByets,0,encodedBytes,i,contentInByets.length);
+        i += contentInByets.length;
+        encodedBytes[i] = (byte)c;
+        i+=1;
+        byte[] encodedToSend = new byte[i];
+        System.arraycopy(encodedBytes,0,encodedToSend,0,i);
+        return encodedToSend;
+    }
+    //~~~~~~~~~~~~~~~~Error~~~~~~~~~~~~
+    private byte[] encodeError(ErrorMsg errorMsg){
+        byte[] encodedBytes = new byte[1 << 10];
+        int i =0;
+        System.arraycopy(shortToBytes(errorMsg.getOpcode()),0,encodedBytes,i,2);
+        i += 2;
+        System.arraycopy(shortToBytes(errorMsg.getOpcodeRespose()),0,encodedBytes,i,2);
+        i +=2;
+        byte[] encodedToSend = new byte[i];
+        System.arraycopy(encodedBytes,0,encodedToSend,0,i);
+        return encodedToSend;
+
+    }
+
+    @Override
+    //Server to Client Messages:
+    //Notification -ACK -Error only
+    public byte[] encode(Message message) {
+        if(message instanceof Ack){
+            if(message instanceof AckFollowUserlist){
+                return encodeFollowUserlist((AckFollowUserlist)message);
+            }
+            if(message instanceof AckStat){
+                return encodeStat((AckStat)message);
+            }
+            //None of them. regular ack
+            return encodeAck((Ack)message);
+        }
+        if(message instanceof Notification){
+            return encodeNoti((Notification) message);
+        }
+        if(message instanceof ErrorMsg){
+            return encodeError((ErrorMsg)message);
+        }
+        System.out.println("WR: end of encode message in encdecServer");
+        return (message + "\n").getBytes(); //uses utf8 by default
+    }
+
+    private void pushByte(byte nextByte) {
+        if (len >= bytes.length) {
+            bytes = Arrays.copyOf(bytes, len * 2);
+        }
+
+        bytes[len++] = nextByte;
+    }
+
+    private String popString() {
+        //notice that we explicitly requesting that the string will be decoded from UTF-8
+        //this is not actually required as it is the default encoding in java.
+        String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
+        len = 0;
+        return result;
+    }
+}
+
+
+//Garbage Code
+                /*
                 case 9: {
                     if (timesInCase == 0) {
                         if (nextByte == '\n') {
@@ -157,37 +332,4 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 case 11: {
                     break;
                 }
-
-            }
-        }
-        return msg;
-    }
-
-
-    public short bytesToShort(byte[] byteArr)
-    {
-        short result = (short)((byteArr[0] & 0xff) << 8);
-        result += (short)(byteArr[1] & 0xff);
-        return result;
-    }
-    @Override
-    public byte[] encode(Message message) {
-        return (message + "\n").getBytes(); //uses utf8 by default
-    }
-
-    private void pushByte(byte nextByte) {
-        if (len >= bytes.length) {
-            bytes = Arrays.copyOf(bytes, len * 2);
-        }
-
-        bytes[len++] = nextByte;
-    }
-
-    private String popString() {
-        //notice that we explicitly requesting that the string will be decoded from UTF-8
-        //this is not actually required as it is the default encoding in java.
-        String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
-        len = 0;
-        return result;
-    }
-}
+                */
