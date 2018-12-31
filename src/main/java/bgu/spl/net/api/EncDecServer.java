@@ -19,18 +19,19 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     private short userWeSaw = 0;
     private int timesInCase = 0;
     private boolean readingOpcode = true;
+
     @Override
     public Message decodeNextByte(byte nextByte) {
         //notice that the top 128 ascii characters have the same representation as their utf-8 counterparts
         //this allow us to do the following comparison
 
-        if(readingOpcode){
+        if (readingOpcode) {
             pushByte(nextByte);
             if (nextByte == '\n') {
                 opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 1));//Read the first 2 bytes - they are the opcode.
                 numOfZero = 0;
             }
-        }else {
+        } else {
             switch (opcode) {
                 case 1: {
                     if (nextByte == '\n') {
@@ -71,7 +72,6 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 case 3: {
                     readingOpcode = true;
                     return new Logout(opcode);
-                    break;
                 }
                 case 4: {
                     if (timesInCase == 0) {
@@ -123,27 +123,26 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 case 7: {
                     readingOpcode = true;
                     return new Userlist(opcode);
-                    break;
                 }
                 case 8: {
                     if (nextByte == '\n') {
                         readingOpcode = true;
-                        return new Stat(opcode,popString());
+                        return new Stat(opcode, popString());
                     }
                     break;
                 }
                 case 9: {
-                    if(timesInCase == 0){
-                        if(nextByte == '\n'){
+                    if (timesInCase == 0) {
+                        if (nextByte == '\n') {
                             pmTruePostFalse = true;
                         }
                         timesInCase++;
                     }
-                    if(nextByte == '\n'){
-                        if(numOfZero == 0){
+                    if (nextByte == '\n') {
+                        if (numOfZero == 0) {
                             s1 = popString();
                         }
-                        if(numOfZero == 1){
+                        if (numOfZero == 1) {
                             s2 = popString();
                             timesInCase = 0;
                             readingOpcode = true;
@@ -161,7 +160,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
 
             }
         }
-}
+        return msg;
+    }
 
 
     public short bytesToShort(byte[] byteArr)
