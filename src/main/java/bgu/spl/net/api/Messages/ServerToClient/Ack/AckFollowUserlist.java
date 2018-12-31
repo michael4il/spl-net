@@ -10,6 +10,7 @@ public class AckFollowUserlist extends Ack {
         this.userNameList = userNameList;
     }
 
+
     public short getNumOfUsers() {
         return numOfUsers;
     }

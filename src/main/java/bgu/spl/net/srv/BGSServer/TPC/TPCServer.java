@@ -33,16 +33,13 @@ public class TPCServer extends BaseServer {
 
             setSock(serverSock); //just to be able to close
 
-            int i = 0;
+            //clientId represents the primary key for the users - we still don't know their username.
             while (!Thread.currentThread().isInterrupted()) {
                 Socket clientSock = serverSock.accept();
                 ConnectionHandlerTPC handler = new ConnectionHandlerTPC(
-                        "LALA" + i,
-                        "lala" +i,
                         clientSock,
                         (MessageEncoderDecoder) getEncdecFactory().get(),
-                        (MessagingProtocol)getProtocolFactory().get());
-                i++;
+                        (MessagingProtocol)getProtocolFactory().get(),clientId);
                 executeByInterface(handler);
             }
         } catch (IOException ex) {

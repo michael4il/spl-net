@@ -23,16 +23,18 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     private short userWeSaw = 0;
     private int timesInCase = 0;
     private boolean readingOpcode = true;
-
+    private String[] listOfUsers = new String[1 << 10];
+    private int usersIndex = 0;
 
     private void init(){
-         numOfZero = 0;
-         follow = false;
-         numOfUsers = 0;
-         userWeSaw = 0;
-         timesInCase = 0;
-         //Make it false to go to switch.
-         readingOpcode = false;
+        numOfZero = 0;
+        follow = false;
+        numOfUsers = 0;
+        userWeSaw = 0;
+        timesInCase = 0;
+        usersIndex = 0;
+        //Make it false to go to switch.
+        readingOpcode = false;
     }
 
     @Override
@@ -59,13 +61,13 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
                             msg = new Register(opcode, s1, s2);
-                            numOfZero = 0;
                             readingOpcode = true;
                             return msg;
                         }
+                    }else {
+                        pushByte(nextByte);
+                        break;
                     }
-                    pushByte(nextByte);
-                    break;
                 }case 2: {
                     if (nextByte == '\n') {
                         if (numOfZero == 0) {
@@ -75,16 +77,16 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
                             msg = new Login(opcode, s1, s2);
-                            numOfZero = 0;
                             readingOpcode = true;
                             return msg;
                         }
                     } else {
                         pushByte(nextByte);
+                        break;
                     }
-                    break;
                 }
                 case 3: {
+                    len = 0;
                     readingOpcode = true;
                     return new Logout(opcode);
                 }
@@ -93,24 +95,33 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         if (nextByte == '\n') {
                             follow = true;
                         }
-                        timesInCase++;
+                        break;
                     }
-                    if (timesInCase == 1) {//we read the number of user we want to follow/unfollow
-                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 2, 2));//The third byte.
-                        timesInCase++;
-                    }
-                    if (nextByte == '\n') {
-                        userWeSaw++;
-                        if (userWeSaw == numOfUsers) {
-                            readingOpcode = true;
-                            timesInCase = 0;
-                            return new Follow(opcode, new String(bytes, 3, len, StandardCharsets.UTF_8), numOfUsers, follow);
-                        }
-                    } else {
-                        //In this implementation we do not decode the first part and any \n, if we want to decode it the code should
-                        //be outside the "else" statement.
+                    //if (timesInCase == 1) we read the *first Byte* number of user we want to follow/unfollow
+                    if (timesInCase == 2) {//we read the number of user we want to follow/unfollow
                         pushByte(nextByte);
+                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 1, 2));//The Second and the third byte.
+                        //Init the length.
+                        len = 0;
+                        break;
                     }
+                    if(timesInCase > 2) {
+                        if (nextByte == '\n') {
+                            listOfUsers[userWeSaw] = popString();
+                            userWeSaw++;
+                            if (userWeSaw == numOfUsers) {
+                                String[] listOfUsersToSend = new String[numOfUsers];
+                                System.arraycopy(listOfUsers,0,listOfUsersToSend,0,numOfUsers);
+                                readingOpcode = true;
+                                return new Follow(opcode,listOfUsersToSend,numOfUsers,follow);
+                            }
+                        }else {
+                            //In this implementation we do decode the first part and any \n, if we want not to decode it the code should
+                            //be inside an "else" statement.
+                            pushByte(nextByte);
+                        }
+                    }
+                    timesInCase++;
                     break;
                 }
                 case 5: {
@@ -125,6 +136,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     if (nextByte == '\n') {
                         if (numOfZero == 0) {
                             s1 = popString();//username for the private message
+                            numOfZero++;
                             break;
                         }
                         if (numOfZero == 1) {
@@ -132,10 +144,13 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                             readingOpcode = true;
                             return new PM(opcode, s1, s2);
                         }
+                    }else {
+                        pushByte(nextByte);
+                        break;
                     }
-                    break;
                 }
                 case 7: {
+                    len = 0;
                     readingOpcode = true;
                     return new Userlist(opcode);
                 }
@@ -143,6 +158,9 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     if (nextByte == '\n') {
                         readingOpcode = true;
                         return new Stat(opcode, popString());
+                    }else
+                    {
+                        pushByte(nextByte);
                     }
                     break;
                 }
@@ -151,7 +169,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 */
             }
         }
-        return msg;
+        //null means that the protocol needs to wait with the response.
+        return null;
     }
 
 

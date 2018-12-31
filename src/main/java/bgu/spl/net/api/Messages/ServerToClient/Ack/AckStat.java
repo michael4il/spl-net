@@ -14,6 +14,7 @@ public class AckStat extends Ack {
         this.numOfFollowing = numOfFollowing;
     }
 
+
     public short getNumOfPosts() {
         return numOfPosts;
     }
