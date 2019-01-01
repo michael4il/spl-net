@@ -7,13 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionsImpl implements Connections<Message> {
 
-    ConcurrentHashMap<Integer, ConnectionHandler> idToHandler = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Integer, String > idToMessage = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, ConnectionHandlerTPC> idToHandler = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, String > idToMessage = new ConcurrentHashMap<>();
 
     @Override
     public boolean send(int connectionId, Message msg) {
-        ((ConnectionHandlerTPC)idToHandler.get(connectionId)).send(msg);
+        (idToHandler.get(connectionId)).send(msg);
         return false;
     }
 
@@ -30,10 +30,10 @@ public class ConnectionsImpl implements Connections<Message> {
 
     @Override
     public void add(ConnectionHandler handlerToAdd, int id) {
-        idToHandler.put(id, handlerToAdd);
+        idToHandler.put(id,(ConnectionHandlerTPC) handlerToAdd);
     }
 
-    public ConcurrentHashMap<Integer, ConnectionHandler> getIdToHandler() {
+    public ConcurrentHashMap<Integer, ConnectionHandlerTPC> getIdToHandler() {
         return idToHandler;
     }
 

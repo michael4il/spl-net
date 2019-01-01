@@ -79,4 +79,40 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
     public BidiMessagingProtocol<Message> getProtocol() {
         return protocol;
     }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public int getConnectionId() {
+        return connectionId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public boolean isLogin() {
+        return login;
+    }
+
+    public ConcurrentLinkedQueue<MessageMarker> getMessagesWaitingToConnect() {
+        return messagesWaitingToConnect;
+    }
+
+    public ConcurrentLinkedQueue<String> getWhoFollowsMe() {
+        return whoFollowsMe;
+    }
+
+    public ConcurrentLinkedQueue<String> getWhoIFollow() {
+        return whoIFollow;
+    }
+
+    public void setLogin(boolean login) {
+        this.login = login;
+    }
 }
