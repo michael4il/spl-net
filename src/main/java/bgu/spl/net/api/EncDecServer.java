@@ -27,6 +27,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     private int usersIndex = 0;
 
     private void init(){
+        len = 0;
         numOfZero = 0;
         follow = false;
         numOfUsers = 0;
@@ -44,8 +45,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
 
         if (readingOpcode) {
             if (nextByte == '\n') {
-                opcode = 1;
-                //opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 1));//Read the first 2 bytes - they are the opcode.
+                opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 2));//Read the first 2 bytes - they are the opcode.
                 init();
             }else {
                 pushByte(nextByte);
@@ -101,7 +101,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     //if (timesInCase == 1) we read the *first Byte* number of user we want to follow/unfollow
                     if (timesInCase == 2) {//we read the number of user we want to follow/unfollow
                         pushByte(nextByte);
-                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 1, 2));//The Second and the third byte.
+                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 1, 3));//The Second and the third byte.
                         //Init the length.
                         len = 0;
                         break;

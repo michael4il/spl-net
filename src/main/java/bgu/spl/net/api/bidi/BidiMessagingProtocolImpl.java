@@ -16,9 +16,11 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         if(connections.getNameToId().get(register.getUsername())!= null){//means the name is already exist
             ErrorMsg errorMsg = new ErrorMsg((short)11, (short)1);
             connections.send(connectionId,errorMsg);
+            System.out.println(register.getPassword());
         }else {
-            //TODO
-            Ack ack = new Ack((short) 10, (short) 6);
+            connections.getNameToId().put(register.getUsername(),connectionId);
+            Ack ack = new Ack((short) 10, (short) 1);
+            System.out.println(register.getUsername());
             connections.send(connectionId,ack);
         }
     }

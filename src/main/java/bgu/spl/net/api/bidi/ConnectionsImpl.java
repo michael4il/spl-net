@@ -9,6 +9,7 @@ public class ConnectionsImpl implements Connections<Message> {
 
     ConcurrentHashMap<Integer, ConnectionHandler> idToHandler = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Integer, String > idToMessage = new ConcurrentHashMap<>();
 
     @Override
     public boolean send(int connectionId, Message msg) {
