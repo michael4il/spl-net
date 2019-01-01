@@ -15,13 +15,15 @@ public class TPCServer extends BaseServer {
     private Connections connections;
     private int clientId = 0;
 
+
     public TPCServer(
             int port,
-            Supplier<BidiMessagingProtocol<Message>> protocolSupplier,
+            Supplier<BidiMessagingProtocol> protocolSupplier,
             Supplier<MessageEncoderDecoder<Message>> encoderDecoderSupplier){
         super(port, protocolSupplier, encoderDecoderSupplier);
         this.connections = new ConnectionsImpl();
     }
+
 
     @Override
     public void serve() {
@@ -34,8 +36,8 @@ public class TPCServer extends BaseServer {
             while (!Thread.currentThread().isInterrupted()) {
                 Socket clientSock = serverSock.accept();
                 ConnectionHandlerTPC handler = new ConnectionHandlerTPC(
-                        (BidiMessagingProtocol<Message>)getEncdecFactory().get(),
-                        (MessageEncoderDecoder<Message>)getProtocolFactory().get(),
+                        (BidiMessagingProtocol<Message>)getProtocolFactory().get(),
+                        (MessageEncoderDecoder<Message>)getEncdecFactory().get(),
                         clientSock);
                 execute(handler);
             }

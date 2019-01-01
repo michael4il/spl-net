@@ -19,21 +19,23 @@ public class NewsFeedClientMain {
         try (RCIClient c = new RCIClient(host, 7777)) {
             c.send(new PublishNewsCommand(
                     "jobs",
-                    "System Programmer, knowledge in C++, Java and Python required. call 0x134693F"));
+                    " msg 1 jobs"));
 
             c.receive(); //ok
 
             c.send(new PublishNewsCommand(
                     "headlines",
-                    "new SPL assignment is out soon!!"));
+                    "msg 2 headlines"));
 
             c.receive(); //ok
 
             c.send(new PublishNewsCommand(
                     "headlines",
-                    "THE CAKE IS A LIE!"));
+                    "msg 3 headlines"));
 
             c.receive(); //ok
+            c.send(new FetchNewsCommand("jobs"));
+            System.out.println("first client received: "+ c.receive());
         }
 
     }

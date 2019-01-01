@@ -1,6 +1,8 @@
 package bgu.spl.net.impl.echo;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
+
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -40,5 +42,20 @@ public class LineMessageEncoderDecoder implements MessageEncoderDecoder<String> 
         String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
         len = 0;
         return result;
+    }
+    public short bytesToShort(byte[] byteArr)
+    {
+        short result = (short)((byteArr[0] & 0xff) << 8);
+        result += (short)(byteArr[1] & 0xff);
+        return result;
+    }
+
+    @SuppressWarnings("Duplicates")
+    public byte[] shortToBytes(short num)
+    {
+        byte[] bytesArr = new byte[2];
+        bytesArr[0] = (byte)((num >> 8) & 0xFF);
+        bytesArr[1] = (byte)(num & 0xFF);
+        return bytesArr;
     }
 }

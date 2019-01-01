@@ -17,7 +17,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             ErrorMsg errorMsg = new ErrorMsg((short)11, (short)1);
             connections.send(connectionId,errorMsg);
         }else {
-            Ack ack = new Ack((short) 10, (short) 1);
+            //TODO
+            Ack ack = new Ack((short) 10, (short) 6);
             connections.send(connectionId,ack);
         }
     }

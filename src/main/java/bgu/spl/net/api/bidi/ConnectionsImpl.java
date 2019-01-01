@@ -1,22 +1,23 @@
 package bgu.spl.net.api.bidi;
 
+import bgu.spl.net.api.Messages.Message;
 import bgu.spl.net.api.bidi.ConnectionHandler;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConnectionsImpl<T> implements Connections<T> {
+public class ConnectionsImpl implements Connections<Message> {
 
     ConcurrentHashMap<Integer, ConnectionHandler> idToHandler = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
 
     @Override
-    public boolean send(int connectionId, T msg) {
-        idToHandler.get(connectionId).send(msg);
+    public boolean send(int connectionId, Message msg) {
+        ((ConnectionHandlerTPC)idToHandler.get(connectionId)).send(msg);
         return false;
     }
 
     @Override
-    public void broadcast(T msg) {
+    public void broadcast(Message msg) {
         idToHandler.forEach((i,handler)->handler.send(msg));
     }
 

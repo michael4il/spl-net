@@ -44,7 +44,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
 
         if (readingOpcode) {
             if (nextByte == '\n') {
-                opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 1));//Read the first 2 bytes - they are the opcode.
+                opcode = 1;
+                //opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 1));//Read the first 2 bytes - they are the opcode.
                 init();
             }else {
                 pushByte(nextByte);
