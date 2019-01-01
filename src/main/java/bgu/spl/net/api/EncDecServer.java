@@ -74,6 +74,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         if (numOfZero == 0) {
                             s1 = popString();//s1 is the username
                             numOfZero++;
+                            break;
                         }
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
@@ -87,7 +88,6 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     }
                 }
                 case 3: {
-                    len = 0;
                     readingOpcode = true;
                     return new Logout(opcode);
                 }

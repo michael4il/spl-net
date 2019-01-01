@@ -115,4 +115,12 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
     public void setLogin(boolean login) {
         this.login = login;
     }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }
