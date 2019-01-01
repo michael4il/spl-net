@@ -8,4 +8,9 @@ public class Post extends Message {
         super(opcode);
         this.postMessage = postMessage;
     }
+
+    public String getPostMessage() {
+        return postMessage;
+    }
 }
+

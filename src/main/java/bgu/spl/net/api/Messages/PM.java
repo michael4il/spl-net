@@ -11,4 +11,12 @@ public class PM extends Message {
         this.username = username;
         this.content = content;
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getContent() {
+        return content;
+    }
 }

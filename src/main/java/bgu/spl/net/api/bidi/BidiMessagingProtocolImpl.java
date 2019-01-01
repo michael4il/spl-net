@@ -1,9 +1,6 @@
 package bgu.spl.net.api.bidi;
 
-import bgu.spl.net.api.Messages.Follow;
-import bgu.spl.net.api.Messages.Login;
-import bgu.spl.net.api.Messages.Message;
-import bgu.spl.net.api.Messages.Register;
+import bgu.spl.net.api.Messages.*;
 import bgu.spl.net.api.Messages.ServerToClient.Ack.Ack;
 import bgu.spl.net.api.Messages.ServerToClient.ErrorMsg;
 
@@ -29,8 +26,21 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             connections.send(connectionId,ack);
         }
     }
+    private void processPM(PM pm)
+    {
+
+    }
     private void processFollow(Follow follow)
     {
+        System.out.println(follow.getOpcode()+" " + follow.getNumOfUsers());
+
+        for(String use : follow.getUserlist()){
+            System.out.println(use);
+        }
+    }
+    private void processPost(Post post)
+    {
+        System.out.println(post.getPostMessage());
     }
     private void processLogin(Login login){
         //TODO
@@ -82,6 +92,18 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
                 processLogin((Login)message);
                 break;
             }
+            case 4:{
+                processFollow((Follow) message);
+                break;
+            }
+            case 5:{
+                processPost((Post)message);
+            }
+            case 6: {
+                processPM((PM)message );
+
+            }
+
         }
     }
     @Override

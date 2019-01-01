@@ -96,15 +96,15 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         if (nextByte == '\n') {
                             follow = true;
                         }
-                        break;
                     }
-                    //if (timesInCase == 1) we read the *first Byte* number of user we want to follow/unfollow
+                    if (timesInCase == 1) { //we read the *first Byte* number of user we want to follow/unfollow
+                        pushByte(nextByte);
+                    }
                     if (timesInCase == 2) {//we read the number of user we want to follow/unfollow
                         pushByte(nextByte);
-                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 1, 3));//The Second and the third byte.
+                        numOfUsers = bytesToShort(Arrays.copyOfRange(bytes, 0, 2));//The Second and the third byte.
                         //Init the length.
                         len = 0;
-                        break;
                     }
                     if(timesInCase > 2) {
                         if (nextByte == '\n') {
