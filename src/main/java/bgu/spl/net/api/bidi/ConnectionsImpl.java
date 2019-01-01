@@ -29,7 +29,6 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     //TODO I Added.
-    //Impl later
     //TODO the connectionImpl class will manage the id's
     public void add(int connectionId, DataBase dataBase){
 
