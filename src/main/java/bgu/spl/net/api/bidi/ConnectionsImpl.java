@@ -5,21 +5,22 @@ import bgu.spl.net.api.bidi.ConnectionHandler;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConnectionsImpl implements Connections<Message> {
-
-    private ConcurrentHashMap<Integer, ConnectionHandlerTPC> idToHandler = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<Integer, String > idToMessage = new ConcurrentHashMap<>();
+public class ConnectionsImpl<T> implements Connections<T> {
+    private DataBase dataBase;
 
     @Override
-    public boolean send(int connectionId, Message msg) {
-        (idToHandler.get(connectionId)).send(msg);
+    public boolean send(int connectionId, T msg) {
+        ConnectionHandler handler = (ConnectionHandler)(dataBase.getIdToHandler().get(connectionId));
+        handler.send(msg);
         return false;
     }
 
     @Override
-    public void broadcast(Message msg) {
-        idToHandler.forEach((i,handler)->handler.send(msg));
+    public void broadcast(T msg) {
+        dataBase.getIdToHandler().forEach((i,handler)->{
+            ConnectionHandler handler1 = (ConnectionHandler)handler;
+            handler1.send(msg);
+        });
     }
 
     @Override
@@ -28,16 +29,4 @@ public class ConnectionsImpl implements Connections<Message> {
     }
 
 
-    @Override
-    public void add(ConnectionHandler handlerToAdd, int id) {
-        idToHandler.put(id,(ConnectionHandlerTPC) handlerToAdd);
-    }
-
-    public ConcurrentHashMap<Integer, ConnectionHandlerTPC> getIdToHandler() {
-        return idToHandler;
-    }
-
-    public ConcurrentHashMap<String, Integer> getNameToId() {
-        return nameToId;
-    }
 }

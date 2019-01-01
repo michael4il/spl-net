@@ -1,5 +1,7 @@
 package bgu.spl.net.api.bidi;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public interface Connections<T> {
 
     boolean send(int connectionId, T msg);
@@ -8,6 +10,5 @@ public interface Connections<T> {
 
     void disconnect(int connectionId);
 
-    /*We add*/
-    void add(ConnectionHandler handlerToAdd, int id);
+
 }

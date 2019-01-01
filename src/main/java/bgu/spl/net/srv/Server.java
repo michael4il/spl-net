@@ -3,7 +3,6 @@ package bgu.spl.net.srv;
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
-import bgu.spl.net.api.bidi.ConnectionHandlerTPC;
 
 import java.io.Closeable;
 import java.util.function.Supplier;
@@ -29,11 +28,8 @@ public interface Server<T> extends Closeable {
             Supplier<MessageEncoderDecoder<T> > encoderDecoderFactory) {
 
         return new BaseServer<T>(port, protocolFactory, encoderDecoderFactory) {
-            @Override
-            protected void execute(ConnectionHandlerTPC<T> handler) {
-                System.out.println("WR: Server Interface");
-            }
 
+            @Override
             protected void execute(BlockingConnectionHandler<T>  handler) {
                 new Thread(handler).start();
             }

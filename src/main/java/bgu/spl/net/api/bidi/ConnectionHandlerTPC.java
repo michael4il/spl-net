@@ -1,3 +1,4 @@
+/*
 package bgu.spl.net.api.bidi;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
@@ -42,7 +43,7 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
             out.write(encdec.encode(msg));
             out.flush();
         }catch (IOException e){
-            System.out.println("Some exception occurred");
+            System.out.println("Some IO exception occurred");
         }
 
     }
@@ -59,11 +60,9 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
                 Message nextMessage = encdec.decodeNextByte((byte) read);
                 if (nextMessage != null) {
-                    //This section should change.
                     protocol.process(nextMessage);
                 }
             }
-
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -113,6 +112,7 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
     }
 
     public void setLogin(boolean login) {
+
         this.login = login;
     }
 
@@ -124,3 +124,4 @@ public class ConnectionHandlerTPC<Message> implements ConnectionHandler<Message>
         this.username = username;
     }
 }
+*/
