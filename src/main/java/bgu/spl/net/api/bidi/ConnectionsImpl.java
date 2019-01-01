@@ -2,15 +2,20 @@ package bgu.spl.net.api.bidi;
 
 import bgu.spl.net.api.Messages.Message;
 import bgu.spl.net.api.bidi.ConnectionHandler;
-
 import java.util.concurrent.ConcurrentHashMap;
 
+
+
 public class ConnectionsImpl<T> implements Connections<T> {
-    private DataBase dataBase;
+    private DataBase dataBase;//not needed
+    private ConcurrentHashMap<Integer,ConnectionHandler>idToCh=new ConcurrentHashMap<>();
+    private int counter=0;
+
+    public ConnectionsImpl() { }
 
     @Override
-    public boolean send(int connectionId, T msg) {
-        ConnectionHandler handler = (ConnectionHandler)(dataBase.getIdToHandler().get(connectionId));
+    public  boolean send(int connectionId, T msg) {
+        ConnectionHandler handler = idToCh.get(connectionId);
         handler.send(msg);
         return false;
     }
@@ -30,7 +35,9 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     //TODO I Added.
     //TODO the connectionImpl class will manage the id's
-    public void add(int connectionId, DataBase dataBase){
+    public void add(ConnectionHandler connectionHandler){
+        idToCh.put(counter,connectionHandler);
+        counter++;
 
     }
 

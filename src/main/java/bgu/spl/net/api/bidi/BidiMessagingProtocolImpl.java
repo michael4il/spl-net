@@ -116,5 +116,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         return shouldTerminate;
     }
 
-
+    @Override
+    public Connections getConnections() {
+        return connections;
+    }
 }

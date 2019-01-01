@@ -4,6 +4,7 @@ import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.ConnectionHandler;
+import bgu.spl.net.api.bidi.Connections;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -19,11 +20,13 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
     private BufferedOutputStream out;
     private volatile boolean connected = true;
     private int connectionId;
+    private Connections connections;
 
-    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, BidiMessagingProtocol<T> protocol) {
+    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, BidiMessagingProtocol<T> protocol,Connections connections) {
         this.sock = sock;
         this.encdec = reader;
         this.protocol = protocol;
+        this.connections=connections;
     }
 
     @Override
@@ -44,6 +47,7 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
             in = new BufferedInputStream(sock.getInputStream());
             out = new BufferedOutputStream(sock.getOutputStream());
 
+            protocol.start(connectionId,connections);
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
                 T nextMessage = encdec.decodeNextByte((byte) read);
                 if (nextMessage != null) {
