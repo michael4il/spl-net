@@ -1,8 +1,11 @@
 package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.Messages.Message;
 import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.ConnectionHandler;
+import bgu.spl.net.api.bidi.ConnectionHandlerTPC;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -12,13 +15,13 @@ import java.util.function.Supplier;
 public abstract class BaseServer<T> implements Server<T> {
 
     private final int port;
-    private final Supplier<MessagingProtocol<T>> protocolFactory;
+    private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
 
     public BaseServer(
             int port,
-            Supplier<MessagingProtocol<T>> protocolFactory,
+            Supplier<BidiMessagingProtocol<T>> protocolFactory,
             Supplier<MessageEncoderDecoder<T>> encdecFactory) {
 
         this.port = port;
@@ -38,10 +41,10 @@ public abstract class BaseServer<T> implements Server<T> {
 
                 Socket clientSock = serverSock.accept();
 
-                BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
-                        clientSock,
+                ConnectionHandlerTPC handler = new ConnectionHandlerTPC(
+                        protocolFactory.get(),
                         encdecFactory.get(),
-                        protocolFactory.get());
+                        clientSock);
 
                 execute(handler);
             }
@@ -57,12 +60,14 @@ public abstract class BaseServer<T> implements Server<T> {
 			sock.close();
     }
 
-    protected abstract void execute(BlockingConnectionHandler<T>  handler);
+    protected abstract void execute(ConnectionHandlerTPC<T>  handler);
 
     /*We Add*/
+/*
     protected void executeByInterface(ConnectionHandler<T> handler){
         System.out.println("ExecuteByInterface came from the BaseServer");
     };
+*/
 
     public int getPort() {
         return port;
@@ -76,7 +81,7 @@ public abstract class BaseServer<T> implements Server<T> {
         return encdecFactory;
     }
 
-    public Supplier<MessagingProtocol<T>> getProtocolFactory() {
+    public Supplier<BidiMessagingProtocol<T>> getProtocolFactory() {
         return protocolFactory;
     }
 }

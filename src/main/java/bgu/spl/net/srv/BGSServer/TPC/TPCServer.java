@@ -1,13 +1,10 @@
 package bgu.spl.net.srv.BGSServer.TPC;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.api.Messages.Message;
 import bgu.spl.net.api.MessagingProtocol;
-import bgu.spl.net.api.bidi.ConnectionHandler;
-import bgu.spl.net.api.bidi.ConnectionHandlerTPC;
-import bgu.spl.net.api.bidi.Connections;
-import bgu.spl.net.api.bidi.ConnectionsImpl;
+import bgu.spl.net.api.bidi.*;
 import bgu.spl.net.srv.BaseServer;
-import bgu.spl.net.srv.BlockingConnectionHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,8 +17,8 @@ public class TPCServer extends BaseServer {
 
     public TPCServer(
             int port,
-            Supplier<MessagingProtocol> protocolSupplier,
-            Supplier<MessageEncoderDecoder> encoderDecoderSupplier){
+            Supplier<BidiMessagingProtocol<Message>> protocolSupplier,
+            Supplier<MessageEncoderDecoder<Message>> encoderDecoderSupplier){
         super(port, protocolSupplier, encoderDecoderSupplier);
         this.connections = new ConnectionsImpl();
     }
@@ -37,10 +34,10 @@ public class TPCServer extends BaseServer {
             while (!Thread.currentThread().isInterrupted()) {
                 Socket clientSock = serverSock.accept();
                 ConnectionHandlerTPC handler = new ConnectionHandlerTPC(
-                        clientSock,
-                        (MessageEncoderDecoder) getEncdecFactory().get(),
-                        (MessagingProtocol)getProtocolFactory().get(),clientId);
-                executeByInterface(handler);
+                        (BidiMessagingProtocol<Message>)getEncdecFactory().get(),
+                        (MessageEncoderDecoder<Message>)getProtocolFactory().get(),
+                        clientSock);
+                execute(handler);
             }
         } catch (IOException ex) {
         }
@@ -48,18 +45,35 @@ public class TPCServer extends BaseServer {
         System.out.println("server closed!!!");
     }
 
-    @Override
-    protected void execute(BlockingConnectionHandler handler) {
-
-    }
 
     @Override
-    protected void executeByInterface(ConnectionHandler handler){
-        connections.add( handler ,clientId);
+    protected void execute(ConnectionHandlerTPC handler){
+        connections.add(handler ,clientId);
+        handler.getProtocol().start(clientId,connections);
         clientId++;
-        new Thread((ConnectionHandlerTPC)handler).start();
+        new Thread(handler).start();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*    @Override
+    protected void execute(BlockingConnectionHandler handler) {
+
+    }*/
 /*/*With T
 public class TPCServer<T> extends BaseServer<T> {
     private Connections<T> connections;

@@ -4,8 +4,8 @@ public class AckFollowUserlist extends Ack {
     private short numOfUsers;
     private String[] userNameList;
 
-    public AckFollowUserlist(short opcode, short opcodeRespose, String optionalMsg, short numOfUsers, String[] userNameList) {
-        super(opcode, opcodeRespose, optionalMsg);
+    public AckFollowUserlist(short opcode, short opcodeRespose, short numOfUsers, String[] userNameList) {
+        super(opcode, opcodeRespose);
         this.numOfUsers = numOfUsers;
         this.userNameList = userNameList;
     }

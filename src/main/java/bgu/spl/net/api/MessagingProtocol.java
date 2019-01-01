@@ -1,5 +1,6 @@
 package bgu.spl.net.api;
-
+//NOT NEED TO BE USED~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface MessagingProtocol<T> {
  
     /**

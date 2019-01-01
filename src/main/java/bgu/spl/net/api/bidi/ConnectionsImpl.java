@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionsImpl<T> implements Connections<T> {
 
     ConcurrentHashMap<Integer, ConnectionHandler> idToHandler = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Integer> nameToId = new ConcurrentHashMap<>();
 
     @Override
     public boolean send(int connectionId, T msg) {
@@ -28,5 +29,13 @@ public class ConnectionsImpl<T> implements Connections<T> {
     @Override
     public void add(ConnectionHandler handlerToAdd, int id) {
         idToHandler.put(id, handlerToAdd);
+    }
+
+    public ConcurrentHashMap<Integer, ConnectionHandler> getIdToHandler() {
+        return idToHandler;
+    }
+
+    public ConcurrentHashMap<String, Integer> getNameToId() {
+        return nameToId;
     }
 }

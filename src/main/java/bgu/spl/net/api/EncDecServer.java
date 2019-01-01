@@ -256,7 +256,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         byte b = 0;
         char c = '\n';
         encodedBytes[i] = (byte)c;
-        if(b != (byte)'\n')
+        if(b != (byte)c)
             System.out.println("WR: byte of 0 isn't char /n");
         byte[] contentInByets = notification.getContent().getBytes();
         System.arraycopy(contentInByets,0,encodedBytes,i,contentInByets.length);

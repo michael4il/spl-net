@@ -7,8 +7,8 @@ public class AckStat extends Ack {
     private short numOfFollowers;
     private short numOfFollowing;
 
-    public AckStat(short opcode, short opcodeRespose, String optionalMsg, short numOfPosts, short numOfFollowers, short numOfFollowing) {
-        super(opcode, opcodeRespose, optionalMsg);
+    public AckStat(short opcode, short opcodeRespose, short numOfPosts, short numOfFollowers, short numOfFollowing) {
+        super(opcode, opcodeRespose);
         this.numOfPosts = numOfPosts;
         this.numOfFollowers = numOfFollowers;
         this.numOfFollowing = numOfFollowing;

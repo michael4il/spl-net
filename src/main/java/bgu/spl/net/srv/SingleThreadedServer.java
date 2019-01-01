@@ -3,6 +3,7 @@ package bgu.spl.net.srv;
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.api.bidi.ConnectionHandler;
+import bgu.spl.net.api.bidi.ConnectionHandlerTPC;
 
 import java.util.function.Supplier;
 
@@ -16,16 +17,15 @@ public class SingleThreadedServer extends BaseServer {
         super(port,protocolFactory,encoderDecoderFactory);
     }
 
-    @Override
+ /*   @Override
     protected void execute(BlockingConnectionHandler handler) {
         handler.run();
 
-    }
+    }*/
+
 
     @Override
-    protected void executeByInterface(ConnectionHandler handler) {
+    protected void execute(ConnectionHandlerTPC handler) {
 
     }
-
-
 }
