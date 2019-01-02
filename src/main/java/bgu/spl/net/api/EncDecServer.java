@@ -64,6 +64,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                             numOfZero++;
                             break;
                         }
+                        //
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
                             msg = new Register(s1, s2);
