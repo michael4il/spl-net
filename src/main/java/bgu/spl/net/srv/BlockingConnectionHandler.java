@@ -1,10 +1,9 @@
 package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
-import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl.net.api.bidi.ConnectionHandler;
-import bgu.spl.net.api.bidi.Connections;
+import bgu.spl.net.api.bidi.ConnectionsImpl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -20,13 +19,13 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
     private BufferedOutputStream out;
     private volatile boolean connected = true;
     private int connectionId;
-    private Connections connections;
+    private ConnectionsImpl<T> connections;
 
-    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, BidiMessagingProtocol<T> protocol,Connections connections) {
+    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, BidiMessagingProtocol<T> protocol,ConnectionsImpl connections) {
         this.sock = sock;
         this.encdec = reader;
         this.protocol = protocol;
-        this.connections=connections;
+        this.connections = connections;
     }
 
     @Override
@@ -47,7 +46,7 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
             in = new BufferedInputStream(sock.getInputStream());
             out = new BufferedOutputStream(sock.getOutputStream());
 
-            protocol.start(connectionId,connections);
+            protocol.start(connections.add(this),connections);
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
                 T nextMessage = encdec.decodeNextByte((byte) read);
                 if (nextMessage != null) {
@@ -64,4 +63,5 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
         connected = false;
         sock.close();
     }
+
 }

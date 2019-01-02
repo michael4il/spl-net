@@ -5,8 +5,8 @@ public class Register extends Message {
     private String username;
     private String password;
 
-    public Register(short opcode, String username, String password) {
-        super(opcode);
+    public Register( String username, String password) {
+        super((short)1);
         this.username = username;
         this.password = password;
     }

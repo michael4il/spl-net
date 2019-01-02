@@ -7,8 +7,8 @@ public class Notification extends Message {
     private String postingUser;
     private String content;
 
-    public Notification(short opcode, char PMorPost, String postingUser, String content) {
-        super(opcode);
+    public Notification( char PMorPost, String postingUser, String content) {
+        super((short)9);
         this.PMorPost = PMorPost;
         this.postingUser = postingUser;
         this.content = content;

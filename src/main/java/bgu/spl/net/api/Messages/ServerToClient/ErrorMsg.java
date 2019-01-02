@@ -5,8 +5,8 @@ import bgu.spl.net.api.Messages.Message;
 public class ErrorMsg extends Message {
     private short opcodeRespose;
 
-    public ErrorMsg(short opcode, short opcodeRespose) {
-        super(opcode);
+    public ErrorMsg( short opcodeRespose) {
+        super((short)11);
         this.opcodeRespose = opcodeRespose;
     }
 

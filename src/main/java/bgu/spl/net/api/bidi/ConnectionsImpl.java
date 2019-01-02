@@ -1,44 +1,37 @@
 package bgu.spl.net.api.bidi;
 
-import bgu.spl.net.api.Messages.Message;
-import bgu.spl.net.api.bidi.ConnectionHandler;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-
 public class ConnectionsImpl<T> implements Connections<T> {
-    private DataBase dataBase;//not needed
-    private ConcurrentHashMap<Integer,ConnectionHandler>idToCh=new ConcurrentHashMap<>();
-    private int counter=0;
+    private int counter=0;//need to be atomic
+    private ConcurrentHashMap<Integer, ConnectionHandler> idToHandler =new ConcurrentHashMap<>();
 
-    public ConnectionsImpl() { }
+
+    public ConnectionsImpl() {}
 
     @Override
     public  boolean send(int connectionId, T msg) {
-        ConnectionHandler handler = idToCh.get(connectionId);
-        handler.send(msg);
-        return false;
+        idToHandler.get(connectionId).send(msg);
+        return true;
     }
 
     @Override
     public void broadcast(T msg) {
-        dataBase.getIdToHandler().forEach((i,handler)->{
-            ConnectionHandler handler1 = (ConnectionHandler)handler;
-            handler1.send(msg);
-        });
+        idToHandler.forEach((i,handler)->handler.send(msg));
     }
 
     @Override
+    //Todo - check if we need to do logout in the Database.
+    //Probably not. already done.
+    //Sync
     public void disconnect(int connectionId) {
-
     }
 
-    //TODO I Added.
     //TODO the connectionImpl class will manage the id's
-    public void add(ConnectionHandler connectionHandler){
-        idToCh.put(counter,connectionHandler);
+    public int add(ConnectionHandler connectionHandler){
         counter++;
-
+        idToHandler.put(counter,connectionHandler);
+        return counter;
     }
 
 }

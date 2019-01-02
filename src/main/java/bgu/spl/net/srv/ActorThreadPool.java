@@ -34,7 +34,7 @@ public class ActorThreadPool {
                 pendingRunnablesOf(act).add(r);
             }
         }
-    }
+    }//
 
     public void shutdown() {
         threads.shutdownNow();

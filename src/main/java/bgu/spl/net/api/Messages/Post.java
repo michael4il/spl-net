@@ -4,8 +4,8 @@ import bgu.spl.net.api.Messages.Message;
 
 public class Post extends Message {
     private String postMessage;
-    public Post(short opcode, String postMessage){
-        super(opcode);
+    public Post(String postMessage){
+        super((short)5);
         this.postMessage = postMessage;
     }
 

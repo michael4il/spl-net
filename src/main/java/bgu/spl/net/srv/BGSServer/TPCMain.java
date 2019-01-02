@@ -1,4 +1,4 @@
-package bgu.spl.net.srv.BGSServer.TPC;
+package bgu.spl.net.srv.BGSServer;
 
 import bgu.spl.net.api.EncDecServer;
 import bgu.spl.net.api.Messages.Message;
@@ -12,24 +12,14 @@ import java.io.IOException;
 
 import static bgu.spl.net.srv.Server.threadPerClient;
 
-public class TPCRunner {
+public class TPCMain {
 
     public static void main(String[] args) throws IOException {
         DataBase dataBase = new DataBase();
 
-
         //server is T=message ,bidi protocol and enc dec is already message
-        Server<Message> threadPerClient =new TPCServer<>(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
-
+        Server threadPerClient = Server.threadPerClient(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
         threadPerClient.serve();
-
-
-
-/*
-Server.threadPerClient(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
-        TPCServer server = new TPCServer(7777,()-> new BidiMessagingProtocolImpl(),()->new EncDecServer());
-        server.serve();*/
-
 
     }
 }

@@ -22,7 +22,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     private short numOfUsers = 0;
     private short userWeSaw = 0;
     private int timesInCase = 0;
-    private boolean readingOpcode = true;
+    private int readingOpcode = 0;
     private String[] listOfUsers = new String[1 << 10];
     private int usersIndex = 0;
 
@@ -35,7 +35,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         timesInCase = 0;
         usersIndex = 0;
         //Make it false to go to switch.
-        readingOpcode = false;
+        /*readingOpcode = 0;*/
+
     }
 
     @Override
@@ -43,14 +44,18 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         //notice that the top 128 ascii characters have the same representation as their utf-8 counterparts
         //this allow us to do the following comparison
 
-        if (readingOpcode) {
-            if (nextByte == '\n') {
+        if (readingOpcode < 2) {
+            pushByte(nextByte);
+            if (readingOpcode == 1 ) {
                 opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 2));//Read the first 2 bytes - they are the opcode.
                 init();
-            }else {
-                pushByte(nextByte);
+                if(opcode == 3){
+                    return new Logout();
+                }
+                if (opcode == 7) return new Userlist();
             }
-        } else {
+        }
+        if(readingOpcode >= 2){
             switch (opcode) {
                 case 1: {
                     if (nextByte == '\n') {
@@ -61,8 +66,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         }
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
-                            msg = new Register(opcode, s1, s2);
-                            readingOpcode = true;
+                            msg = new Register(s1, s2);
+                            readingOpcode = 0;
                             return msg;
                         }
                     }else {
@@ -78,8 +83,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         }
                         if (numOfZero == 1) {
                             s2 = popString();//s2 is the password
-                            msg = new Login(opcode, s1, s2);
-                            readingOpcode = true;
+                            msg = new Login(s1, s2);
+                            readingOpcode = 0;
                             return msg;
                         }
                     } else {
@@ -88,8 +93,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     }
                 }
                 case 3: {
-                    readingOpcode = true;
-                    return new Logout(opcode);
+                    readingOpcode = 0;
+                    return new Logout();
                 }
                 case 4: {
                     if (timesInCase == 0) {
@@ -113,8 +118,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                             if (userWeSaw == numOfUsers) {
                                 String[] listOfUsersToSend = new String[numOfUsers];
                                 System.arraycopy(listOfUsers,0,listOfUsersToSend,0,numOfUsers);
-                                readingOpcode = true;
-                                return new Follow(opcode,listOfUsersToSend,numOfUsers,follow);
+                                readingOpcode = 0;
+                                return new Follow(listOfUsersToSend,numOfUsers,follow);
                             }
                         }else {
                             //In this implementation we do decode the first part and any \n, if we want not to decode it the code should
@@ -127,8 +132,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 }
                 case 5: {
                     if (nextByte == '\n') {
-                        readingOpcode = true;
-                        return new Post(opcode, popString());
+                        readingOpcode = 0;
+                        return new Post(popString());
                     }
                     pushByte(nextByte);
                     break;
@@ -142,8 +147,8 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         }
                         if (numOfZero == 1) {
                             s2 = popString();//the content of the message
-                            readingOpcode = true;
-                            return new PM(opcode, s1, s2);
+                            readingOpcode = 0;
+                            return new PM(s1, s2);
                         }
                     }else {
                         pushByte(nextByte);
@@ -152,13 +157,13 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 }
                 case 7: {
                     len = 0;
-                    readingOpcode = true;
-                    return new Userlist(opcode);
+                    readingOpcode = 0;
+                    return new Userlist();
                 }
                 case 8: {
                     if (nextByte == '\n') {
-                        readingOpcode = true;
-                        return new Stat(opcode, popString());
+                        readingOpcode = 0;
+                        return new Stat(popString());
                     }else
                     {
                         pushByte(nextByte);
@@ -170,6 +175,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 */
             }
         }
+        readingOpcode++;
         //null means that the protocol needs to wait with the response.
         return null;
     }
@@ -324,32 +330,3 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
 }
 
 
-//Garbage Code
-                /*
-                case 9: {
-                    if (timesInCase == 0) {
-                        if (nextByte == '\n') {
-                            pmTruePostFalse = true;
-                        }
-                        timesInCase++;
-                    }
-                    if (nextByte == '\n') {
-                        if (numOfZero == 0) {
-                            s1 = popString();
-                        }
-                        if (numOfZero == 1) {
-                            s2 = popString();
-                            timesInCase = 0;
-                            readingOpcode = true;
-                            return new Notification();
-                        }
-                    }
-                    break;
-                }
-                case 10: {
-                    break;
-                }
-                case 11: {
-                    break;
-                }
-                */

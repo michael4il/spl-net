@@ -1,44 +1,36 @@
 package bgu.spl.net.api.bidi;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DataBase<T> {
-    private Connections<T> connections;
-    private ConcurrentHashMap<Integer, ConnectionHandler> idToHandler;
-    private ConcurrentHashMap<String, Integer> nameToId;
+
+    private ConcurrentHashMap<String, Integer> usernameToId;
     private ConcurrentHashMap<String, String> usernameToPassword;
     private ConcurrentHashMap<String, Boolean> usernameToLogin;
 
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> usernameToWaitingT;
+
     public DataBase(){
-        connections = new ConnectionsImpl();
-        idToHandler = new ConcurrentHashMap<>();
-        nameToId = new ConcurrentHashMap<>();
+        usernameToId = new ConcurrentHashMap<>();
         usernameToPassword = new ConcurrentHashMap<>();
         usernameToLogin = new ConcurrentHashMap<>();
+        usernameToWaitingT = new ConcurrentHashMap<>();
     }
 
-    public Connections<T> getConnections() {
-        return connections;
-    }
-
-    public void add(ConnectionHandler handlerToAdd, int id) {
-        idToHandler.put(id, handlerToAdd);
-    }
-
-    public ConcurrentHashMap<Integer, ConnectionHandler> getIdToHandler() {
-        return idToHandler;
-    }
-
-    public ConcurrentHashMap<String, Integer> getNameToId() {
-        return nameToId;
+    public ConcurrentHashMap<String, Integer> getUsernameToId() {
+        return usernameToId;
     }
 
     public ConcurrentHashMap<String, String> getUsernameToPassword() {
         return usernameToPassword;
     }
 
-    public ConcurrentHashMap<String, Boolean> getUsernameToLogin() {
+    public ConcurrentHashMap<String, Boolean> onlineUsers() {
         return usernameToLogin;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> getUsernameToWaitingT() {
+        return usernameToWaitingT;
     }
 }

@@ -5,8 +5,8 @@ import bgu.spl.net.api.Messages.Message;
 public class Ack extends Message {
     private short opcodeRespose;
 
-    public Ack(short opcode, short opcodeRespose) {
-        super(opcode);
+    public Ack( short opcodeRespose) {
+        super((short)10);
         this.opcodeRespose = opcodeRespose;
     }
 
