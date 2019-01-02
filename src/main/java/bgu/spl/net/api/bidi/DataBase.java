@@ -11,7 +11,7 @@ public class DataBase<T> {
     private ConcurrentHashMap<String, Boolean> usernameToLogin;
 
     public DataBase(){
-        connections = new ConnectionsImpl<>();
+        connections = new ConnectionsImpl();
         idToHandler = new ConcurrentHashMap<>();
         nameToId = new ConcurrentHashMap<>();
         usernameToPassword = new ConcurrentHashMap<>();

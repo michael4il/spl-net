@@ -15,13 +15,14 @@ import java.util.function.Supplier;
 
 public class TPCServer<T>  implements Server<T>{ //we use modified blocking handler(with connections),
     // should've used baseServer but we override all methods any way and we need the fields
-    //connections is out here,generic wise?how to add T like protocols
+    //connections generic wise?how to add T like protocols?maybe summon it like the factorys
+    //break the head later
 
     private final int port;
     private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
-    private Connections connections;
+    private Connections<T> connections;
 
 
     public TPCServer(

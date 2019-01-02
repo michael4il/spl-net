@@ -18,11 +18,15 @@ public class TPCRunner {
         DataBase dataBase = new DataBase();
 
 
+        //server is T=message ,bidi protocol and enc dec is already message
         Server<Message> threadPerClient =new TPCServer<>(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
-                //Server.threadPerClient(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
+
         threadPerClient.serve();
 
+
+
 /*
+Server.threadPerClient(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
         TPCServer server = new TPCServer(7777,()-> new BidiMessagingProtocolImpl(),()->new EncDecServer());
         server.serve();*/
 
