@@ -13,6 +13,10 @@ public class DataBase<T> {
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> usernameToWaitingT;
     private AtomicInteger timeStamp;
     private ConcurrentHashMap<Integer, T> timestampToT;
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> whoIfollow;
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> whoFollowsMe;
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> postsOfUser;
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> privateMsgOfUser;
 
     public DataBase(){
         usernameToId = new ConcurrentHashMap<>();
@@ -21,6 +25,10 @@ public class DataBase<T> {
         usernameToWaitingT = new ConcurrentHashMap<>();
         timestampToT = new ConcurrentHashMap<>();
         timeStamp = new AtomicInteger();
+        whoIfollow = new ConcurrentHashMap<>();
+        whoFollowsMe = new ConcurrentHashMap<>();
+        postsOfUser = new ConcurrentHashMap<>();
+        privateMsgOfUser = new ConcurrentHashMap<>();
     }
 
     public ConcurrentHashMap<Integer, T> getTimestampToT() {
@@ -45,5 +53,21 @@ public class DataBase<T> {
 
     public AtomicInteger getTimeStamp() {
         return timeStamp;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> getWhoIfollow() {
+        return whoIfollow;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> getWhoFollowsMe() {
+        return whoFollowsMe;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> getPostsOfUser() {
+        return postsOfUser;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> getPrivateMsgOfUser() {
+        return privateMsgOfUser;
     }
 }

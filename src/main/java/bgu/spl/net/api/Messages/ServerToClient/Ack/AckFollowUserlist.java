@@ -1,10 +1,12 @@
 package bgu.spl.net.api.Messages.ServerToClient.Ack;
 
+import java.util.Vector;
+
 public class AckFollowUserlist extends Ack {
     private short numOfUsers;
-    private String[] userNameList;
+    private Vector<String> userNameList;
 
-    public AckFollowUserlist(short opcodeRespose, short numOfUsers, String[] userNameList) {
+    public AckFollowUserlist(short opcodeRespose, short numOfUsers, Vector<String> userNameList) {
         super(opcodeRespose);
         this.numOfUsers = numOfUsers;
         this.userNameList = userNameList;
@@ -15,7 +17,7 @@ public class AckFollowUserlist extends Ack {
         return numOfUsers;
     }
 
-    public String[] getUserNameList() {
+    public Vector<String> getUserNameList() {
         return userNameList;
     }
 }

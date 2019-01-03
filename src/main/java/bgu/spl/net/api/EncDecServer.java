@@ -9,6 +9,7 @@ import bgu.spl.net.api.Messages.ServerToClient.Notification;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Vector;
 
 public class EncDecServer implements MessageEncoderDecoder<Message> {
     private byte[] bytes = new byte[1 << 10]; //start with 1k
@@ -120,8 +121,11 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                             listOfUsers[userWeSaw] = popString();
                             userWeSaw++;
                             if (userWeSaw == numOfUsers) {
-                                String[] listOfUsersToSend = new String[numOfUsers];
-                                System.arraycopy(listOfUsers,0,listOfUsersToSend,0,numOfUsers);
+                                Vector<String> listOfUsersToSend = new Vector<>();
+                                //String[] listOfUsersToSend = new String[numOfUsers];
+                                for(int i = 0 ; i < numOfUsers; i++){
+                                    listOfUsersToSend.add(listOfUsers[i]);
+                                }
                                 readingOpcode = 0;
                                 return new Follow(listOfUsersToSend,numOfUsers,follow);
                             }
@@ -184,7 +188,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         return null;
     }
 
-
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Function from SPL Website~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     public short bytesToShort(byte[] byteArr)
     {
         short result = (short)((byteArr[0] & 0xff) << 8);
@@ -198,32 +202,40 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         bytesArr[1] = (byte)(num & 0xFF);
         return bytesArr;
     }
-    private String makeWhitespaces(String[] strings){
-        //code from Stack Over Flow
-        //from username BalusC
-        StringBuilder builder = new StringBuilder();
-        for (String string : strings) {
-            if (builder.length() > 0) {
-                builder.append(" ");
-            }
-            builder.append(string);
+
+    private void pushByte(byte nextByte) {
+        if (len >= bytes.length) {
+            bytes = Arrays.copyOf(bytes, len * 2);
         }
-        return builder.toString();
+
+        bytes[len++] = nextByte;
     }
 
-    //~~~~~~~~~~Ack~~~~~~~~~~~~~~~
+    private String popString() {
+        //notice that we explicitly requesting that the string will be decoded from UTF-8
+        //this is not actually required as it is the default encoding in java.
+        String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
+        len = 0;
+        return result;
+    }
+
+    //~~~~~~~~~~Ack~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private byte[] encodeFollowUserlist(AckFollowUserlist ackFollowUserlist){
         byte[] encodedBytes = encodeAck(ackFollowUserlist);
-        String listOfUsers = makeWhitespaces(ackFollowUserlist.getUserNameList());
+        String oneStringOfUsers = new String();
+        while (!ackFollowUserlist.getUserNameList().isEmpty()){
+            oneStringOfUsers = oneStringOfUsers + ackFollowUserlist.getUserNameList().remove(0);
+        }
         int i = 4;// Starts from 4 because the first 4 bytes used by Ack
         System.arraycopy(shortToBytes(ackFollowUserlist.getNumOfUsers()),0,encodedBytes,i,2);//The next 2 bytes are numOfUsers.
         i += 2;
-        System.arraycopy(listOfUsers.getBytes(),0,encodedBytes,i,listOfUsers.getBytes().length);//The rest of the message
-        i += listOfUsers.getBytes().length;
+        System.arraycopy(oneStringOfUsers.getBytes(),0,encodedBytes,i,oneStringOfUsers.getBytes().length);//The rest of the message
+        i += oneStringOfUsers.getBytes().length;
         byte[] encodedToSend = new byte[i];
         System.arraycopy(encodedBytes,0,encodedToSend,0,i);
         return encodedToSend;
     }
+
     private byte[] encodeStat(AckStat ackStat){
         byte[] encodedBytes = encodeAck(ackStat);
         int i = 4;// Starts from 4 because the first 4 bytes used by Ack
@@ -238,7 +250,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         System.arraycopy(encodedBytes,0,encodedToSend,0,i);
         return encodedToSend;
     }
-
+    @SuppressWarnings("Duplicates")
     private byte[] encodeAck(Ack ack){
         byte[] encodedBytes = new byte[1 << 10];
         int i =0;
@@ -250,42 +262,36 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         System.arraycopy(encodedBytes,0,encodedToSend,0,i);
         return encodedToSend;
     }
-    //~~~~~~~~~Notification~~~~~~~~~~
+
+    //~~~~~~~~~Notification~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private byte[] encodeNoti(Notification notification){
         byte[] encodedBytes = new byte[1 << 10];
-        int i =0;
+        int i = 0;
         System.arraycopy(shortToBytes(notification.getOpcode()),0,encodedBytes,i,2);//The first 2 bytes of encodedBytes are the encoding of the opcode.
-        //I hope it would be fine
-        //CASTING CHAR INTO BYTE: NEED TO BE OK *********
+        //PM of Public
         i = i+2;
         encodedBytes[i] = (byte)notification.getPMorPost();
         i++;
         //PostingUser
         byte[] postingUserBytes = notification.getSendingUser().getBytes();
         System.arraycopy(postingUserBytes,0,encodedBytes,i,postingUserBytes.length);
-        i+=postingUserBytes.length;
-        byte b = 0;
+        i += postingUserBytes.length;
         char c = '\n';
         encodedBytes[i] = (byte)c;
-        if(b != (byte)c)
-            System.out.println("WR: byte of 0 isn't char with casting /n");
-        if(b != c)
-            System.out.println("WR: byte of 0 isn't char /n");
-        int fff = 0;
-        if(b == (byte)fff)
-            System.out.println("WR: byte of 0 is casting of int 0");
-        if(b == 32)
-            System.out.println("WR: byte of 0 has the value 32");
+        i++;
+        //Content
         byte[] contentInByets = notification.getContent().getBytes();
         System.arraycopy(contentInByets,0,encodedBytes,i,contentInByets.length);
         i += contentInByets.length;
         encodedBytes[i] = (byte)c;
-        i+=1;
+        i++;
         byte[] encodedToSend = new byte[i];
         System.arraycopy(encodedBytes,0,encodedToSend,0,i);
         return encodedToSend;
     }
-    //~~~~~~~~~~~~~~~~Error~~~~~~~~~~~~
+
+    @SuppressWarnings("Duplicates")
+    //~~~~~~~~~~~~~~~~Error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private byte[] encodeError(ErrorMsg errorMsg){
         byte[] encodedBytes = new byte[1 << 10];
         int i =0;
@@ -298,7 +304,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         return encodedToSend;
 
     }
-
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Encode~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Override
     //Server to Client Messages:
     //Notification -ACK -Error only
@@ -323,21 +329,19 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         return (message + "\n").getBytes(); //uses utf8 by default
     }
 
-    private void pushByte(byte nextByte) {
-        if (len >= bytes.length) {
-            bytes = Arrays.copyOf(bytes, len * 2);
-        }
-
-        bytes[len++] = nextByte;
-    }
-
-    private String popString() {
-        //notice that we explicitly requesting that the string will be decoded from UTF-8
-        //this is not actually required as it is the default encoding in java.
-        String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
-        len = 0;
-        return result;
-    }
 }
 
 
+/*    //TODO delete?
+    private String makeWhitespaces(String[] strings){
+        //code from Stack Over Flow
+        //from username BalusC
+        StringBuilder builder = new StringBuilder();
+        for (String string : strings) {
+            if (builder.length() > 0) {
+                builder.append(" ");
+            }
+            builder.append(string);
+        }
+        return builder.toString();
+    }*/

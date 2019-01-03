@@ -2,9 +2,12 @@ package bgu.spl.net.api.bidi;
 
 import bgu.spl.net.api.Messages.*;
 import bgu.spl.net.api.Messages.ServerToClient.Ack.Ack;
+import bgu.spl.net.api.Messages.ServerToClient.Ack.AckFollowUserlist;
+import bgu.spl.net.api.Messages.ServerToClient.Ack.AckStat;
 import bgu.spl.net.api.Messages.ServerToClient.ErrorMsg;
 import bgu.spl.net.api.Messages.ServerToClient.Notification;
 
+import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /*~~~~~~~The protocol of the server~~~~~~~~~~~*/
@@ -31,9 +34,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         this.connections = connections;
     }
 
-    private String[] taggedPeople(String postContent){
-        String[] names = new String[postContent.length()];//At the size of the post. no more names than the chars.
-
+    private Vector<String> taggedPeople(String postContent){
+        Vector<String> names = new Vector<>();
         return names;
     }
 
@@ -107,13 +109,19 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
     //-------------------------------------------------------------------LOG OUT-------------------------------------------------------------------
     private void processLogout(Logout logout) {
         System.out.println("We entered the Logout method in the protocol");
-        if (dataBase.onlineUsers().get(user)) {
-            dataBase.onlineUsers().replace(user, false);
-            shouldTerminate = true;
-            Ack ack = new Ack((short) 2);
-            connections.send(connectionId, ack);
-            user = null;
-        } else connections.send(connectionId, new ErrorMsg((short) 2));
+        if(user==null){
+            System.out.println("WR: in processLogout user is null");
+        }
+        String lock = user;
+        synchronized (lock){
+            if (dataBase.onlineUsers().get(user)) {
+                dataBase.onlineUsers().replace(user, false);
+                shouldTerminate = true;
+                Ack ack = new Ack((short) 2);
+                connections.send(connectionId, ack);
+                user = null;
+            } else connections.send(connectionId, new ErrorMsg((short) 2));
+        }
     }
 
     //---------------------------------------------------------------FOLLOW---------------------------------------------------------------------
@@ -123,38 +131,66 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             System.out.println(username);
         }
         System.out.println(follow.isFollow());
-        //TODO add who i follow to database.
-/*        if(user==null){
+        if(user==null){
             connections.send(connectionId,new ErrorMsg((short)4));
         }else {
-            short succesfullUsers = 0;
-            for (String username : follow.getUserlist()) {
-                ConnectionHandler userHandler = dataBase.
+            short successfulUsers = 0;
+            for (String followHim : follow.getUserlist()) {
                 if (follow.isFollow()) {
-                    //do follow
+                    //do follow, change twice
+                    //check if followHim exist.
+                    if(dataBase.getUsernameToPassword().get(followHim) != null) {
+                        dataBase.getWhoIfollow().get(user).add(followHim);
+                        dataBase.getWhoFollowsMe().get(followHim).add(user);
+                        successfulUsers++;
+                    }
                 } else {
-                    //unfolllow
-                }
-                if (something succeed){
-                    succesfullUsers++;
+                    if (dataBase.getUsernameToPassword().get(followHim) != null) {
+                        ConcurrentLinkedQueue<String> iFollowThey = dataBase.getWhoIfollow().get(user);
+                        for(String iFollowHim : iFollowThey){
+                            if(iFollowHim.equals(followHim)){
+                                iFollowThey.remove(iFollowHim);
+                                dataBase.getWhoFollowsMe().get(iFollowHim).remove(user);
+                                successfulUsers++;
+                            }
+                        }
+                    }
                 }
             }
-            if (succesfullUsers > 0) {
+
+            if (successfulUsers > 0) {
                 //send ack
             } else {
                 //send error
             }
-        }*/
+        }
+    }
+
+
+    private void sendPost(String peopleToSendTo, Notification postNotification){
+        int idTosend = dataBase.getUsernameToId().get(peopleToSendTo);
+        synchronized (peopleToSendTo){
+            if(dataBase.onlineUsers().get(peopleToSendTo))
+                connections.send(idTosend, postNotification);
+            else dataBase.getUsernameToWaitingT().get(peopleToSendTo).add(postNotification);
+        }
     }
 
     //---------------------------------------------------------------POST---------------------------------------------------------------------
     private void processPost(Post post) {
         System.out.println("We entered the PM method in the protocol");
+        char c = 1;
+        Notification postNotification = new Notification(c,user,post.getContent());
         //TODO check if timestamp needed.
         dataBase.getTimestampToT().put(0,post);
-        String[] taggedPeople = taggedPeople(post.getContent());
-        //TODO Send notification for who i follow and for taggedPeople.
-
+        Vector<String> taggedPeople = taggedPeople(post.getContent());
+        for (String follower: dataBase.getWhoFollowsMe().get(user)) {
+            sendPost(follower,postNotification);
+        }
+        while (!taggedPeople.isEmpty()){
+            String tagged = taggedPeople.remove(0);
+            sendPost(tagged,postNotification);
+        }
     }
 
     //---------------------------------------------------------------PM---------------------------------------------------------------------
@@ -162,11 +198,12 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         System.out.println("We entered the PM method in the protocol");
         //TODO check if timestamp needed.
         dataBase.getTimestampToT().put(0,pm);
-        Notification notification = new Notification('\n' ,pm.getUsername(),pm.getContent());
+        Notification notification = new Notification('\n' ,user,pm.getContent());
+        int idTosend = dataBase.getUsernameToId().get(pm.getUsername());
         //If the user logged in
         synchronized (pm.getUsername()) {
             if (dataBase.onlineUsers().get(pm.getUsername())) {
-                connections.send(connectionId, notification);
+                connections.send(idTosend, notification);
                 connections.send(connectionId,new Ack((short)6));
             } else {
                 dataBase.getUsernameToWaitingT().get(pm.getUsername()).add(notification);
@@ -177,13 +214,31 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //---------------------------------------------------------------USER LIST---------------------------------------------------------------------
     private void processUserlist(Userlist userlist) {
-
+        if(dataBase.onlineUsers().get(user)){
+            Vector<String> vectorOfAllUsers = new Vector<>();
+            short numOfCurrentUsers = (short)dataBase.getUsernameToPassword().size();
+            dataBase.getUsernameToPassword().forEach((name,pass)->{
+                vectorOfAllUsers.add(name);
+            });
+            AckFollowUserlist ackFollowUserlist = new AckFollowUserlist((short)7,numOfCurrentUsers,vectorOfAllUsers);
+            connections.send(connectionId,ackFollowUserlist);
+        }else connections.send(connectionId,new ErrorMsg((short)7));
     }
 
     //---------------------------------------------------------------STAT---------------------------------------------------------------------
     private void processStat(Stat stat) {
-
+        int idToSend = dataBase.getUsernameToId().get(stat.getUsername());
+        if(user == null){//the user that send is Logout
+            connections.send(connectionId, new ErrorMsg((short)8));
+        }else{
+            //bring from the database the information.
+            short numPosts = (short)dataBase.getPostsOfUser().size();
+            short numFollowers = (short)dataBase.getWhoFollowsMe().size();
+            short numFollowing = (short)dataBase.getWhoIfollow().size();
+            connections.send(connectionId,new AckStat(numPosts,numFollowers,numFollowing));
+        }
     }
+    //------------------------------------------------------------------------------------------------------------------------------------------
 
 
     @Override

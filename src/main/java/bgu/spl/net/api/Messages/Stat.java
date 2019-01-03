@@ -9,4 +9,8 @@ public class Stat extends Message {
         super((short)8);
         this.username = username;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }
