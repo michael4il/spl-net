@@ -50,9 +50,13 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 opcode = bytesToShort(Arrays.copyOfRange(bytes, 0, 2));//Read the first 2 bytes - they are the opcode.
                 init();
                 if(opcode == 3){
+                    readingOpcode = 0;
                     return new Logout();
                 }
-                if (opcode == 7) return new Userlist();
+                if (opcode == 7) {
+                    readingOpcode = 0;
+                    return new Userlist();
+                }
             }
         }
         if(readingOpcode >= 2){
@@ -257,7 +261,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         encodedBytes[i] = (byte)notification.getPMorPost();
         i++;
         //PostingUser
-        byte[] postingUserBytes = notification.getPostingUser().getBytes();
+        byte[] postingUserBytes = notification.getSendingUser().getBytes();
         System.arraycopy(postingUserBytes,0,encodedBytes,i,postingUserBytes.length);
         i+=postingUserBytes.length;
         byte b = 0;

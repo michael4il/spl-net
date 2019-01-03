@@ -1,16 +1,14 @@
 package bgu.spl.net.api.Messages;
 
-import bgu.spl.net.api.Messages.Message;
-
 public class Post extends Message {
-    private String postMessage;
-    public Post(String postMessage){
+    private String content;
+    public Post(String content){
         super((short)5);
-        this.postMessage = postMessage;
+        this.content = content;
     }
 
-    public String getPostMessage() {
-        return postMessage;
+    public String getContent() {
+        return content;
     }
 }
 
