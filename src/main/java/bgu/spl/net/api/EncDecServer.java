@@ -268,7 +268,14 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         char c = '\n';
         encodedBytes[i] = (byte)c;
         if(b != (byte)c)
+            System.out.println("WR: byte of 0 isn't char with casting /n");
+        if(b != c)
             System.out.println("WR: byte of 0 isn't char /n");
+        int fff = 0;
+        if(b == (byte)fff)
+            System.out.println("WR: byte of 0 is casting of int 0");
+        if(b == 32)
+            System.out.println("WR: byte of 0 has the value 32");
         byte[] contentInByets = notification.getContent().getBytes();
         System.arraycopy(contentInByets,0,encodedBytes,i,contentInByets.length);
         i += contentInByets.length;

@@ -31,8 +31,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         this.connections = connections;
     }
 
-    private String[] taggedPeople(String post){
-        String[] names = new String[post.length()];//At the size of the post. no more names than the chars.
+    private String[] taggedPeople(String postContent){
+        String[] names = new String[postContent.length()];//At the size of the post. no more names than the chars.
 
         return names;
     }
@@ -89,9 +89,12 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
                     //TODO add getting the messages before
                     //The acts we do when a user logs in
                     user = login.getUsername();
-                    dataBase.getUsernameToWaitingT().get(user).forEach(message -> {
+                    while (!dataBase.getUsernameToWaitingT().get(user).isEmpty()){
+                        connections.send(connectionId,dataBase.getUsernameToWaitingT().get(user).poll());
+                    }
+/*                    dataBase.getUsernameToWaitingT().get(user).forEach(message -> {
                         connections.send(connectionId, message);
-                    });
+                    });*/
                     dataBase.onlineUsers().replace(login.getUsername(), true);
                     //Ack
                     Ack ack = new Ack((short) 2);
@@ -121,7 +124,7 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         }
         System.out.println(follow.isFollow());
         //TODO add who i follow to database.
-        if(user==null){
+/*        if(user==null){
             connections.send(connectionId,new ErrorMsg((short)4));
         }else {
             short succesfullUsers = 0;
@@ -141,7 +144,7 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             } else {
                 //send error
             }
-        }
+        }*/
     }
 
     //---------------------------------------------------------------POST---------------------------------------------------------------------
@@ -159,13 +162,15 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         System.out.println("We entered the PM method in the protocol");
         //TODO check if timestamp needed.
         dataBase.getTimestampToT().put(0,pm);
-        Notification notification = new Notification('\n',pm.getUsername(),pm.getContent());
+        Notification notification = new Notification('\n' ,pm.getUsername(),pm.getContent());
         //If the user logged in
         synchronized (pm.getUsername()) {
             if (dataBase.onlineUsers().get(pm.getUsername())) {
                 connections.send(connectionId, notification);
+                connections.send(connectionId,new Ack((short)6));
             } else {
                 dataBase.getUsernameToWaitingT().get(pm.getUsername()).add(notification);
+                connections.send(connectionId,new ErrorMsg((short)6));
             }
         }
     }
