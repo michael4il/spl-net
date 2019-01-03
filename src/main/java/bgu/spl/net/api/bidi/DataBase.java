@@ -9,7 +9,6 @@ public class DataBase<T> {
     private ConcurrentHashMap<String, Integer> usernameToId;
     private ConcurrentHashMap<String, String> usernameToPassword;
     private ConcurrentHashMap<String, Boolean> usernameToLogin;
-
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> usernameToWaitingT;
     private AtomicInteger timeStamp;
     private ConcurrentHashMap<Integer, T> timestampToT;
@@ -17,6 +16,7 @@ public class DataBase<T> {
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> whoFollowsMe;
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> postsOfUser;
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> privateMsgOfUser;
+    private ConcurrentLinkedQueue<String> users;
 
     public DataBase(){
         usernameToId = new ConcurrentHashMap<>();
@@ -29,6 +29,7 @@ public class DataBase<T> {
         whoFollowsMe = new ConcurrentHashMap<>();
         postsOfUser = new ConcurrentHashMap<>();
         privateMsgOfUser = new ConcurrentHashMap<>();
+        users = new ConcurrentLinkedQueue<>();
     }
 
     public ConcurrentHashMap<Integer, T> getTimestampToT() {
@@ -69,5 +70,9 @@ public class DataBase<T> {
 
     public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> getPrivateMsgOfUser() {
         return privateMsgOfUser;
+    }
+
+    public ConcurrentLinkedQueue<String> getUsers() {
+        return users;
     }
 }

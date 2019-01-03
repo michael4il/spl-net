@@ -35,9 +35,6 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         userWeSaw = 0;
         timesInCase = 0;
         usersIndex = 0;
-        //Make it false to go to switch.
-        /*readingOpcode = 0;*/
-
     }
 
     @Override
@@ -63,7 +60,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         if(readingOpcode >= 2){
             switch (opcode) {
                 case 1: {
-                    if (nextByte == '\n') {
+                    if (nextByte == '\0') {
                         if (numOfZero == 0) {
                             s1 = popString();//s1 is the username
                             numOfZero++;
@@ -80,7 +77,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         break;
                     }
                 }case 2: {
-                    if (nextByte == '\n') {
+                    if (nextByte == '\0') {
                         if (numOfZero == 0) {
                             s1 = popString();//s1 is the username
                             numOfZero++;
@@ -103,7 +100,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                 }
                 case 4: {
                     if (timesInCase == 0) {
-                        if (nextByte == '\n') {
+                        if (nextByte == '\0') {
                             follow = true;
                         }
                     }
@@ -117,7 +114,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                         len = 0;
                     }
                     if(timesInCase > 2) {
-                        if (nextByte == '\n') {
+                        if (nextByte == '\0') {
                             listOfUsers[userWeSaw] = popString();
                             userWeSaw++;
                             if (userWeSaw == numOfUsers) {
@@ -139,7 +136,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     break;
                 }
                 case 5: {
-                    if (nextByte == '\n') {
+                    if (nextByte == '\0') {
                         readingOpcode = 0;
                         return new Post(popString());
                     }
@@ -147,7 +144,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     break;
                 }
                 case 6: {
-                    if (nextByte == '\n') {
+                    if (nextByte == '\0') {
                         if (numOfZero == 0) {
                             s1 = popString();//username for the private message
                             numOfZero++;
@@ -169,7 +166,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
                     return new Userlist();
                 }
                 case 8: {
-                    if (nextByte == '\n') {
+                    if (nextByte == '\0') {
                         readingOpcode = 0;
                         return new Stat(popString());
                     }else
@@ -221,12 +218,17 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
 
     //~~~~~~~~~~Ack~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     private byte[] encodeFollowUserlist(AckFollowUserlist ackFollowUserlist){
-        byte[] encodedBytes = encodeAck(ackFollowUserlist);
+        byte[] encodedBytes = new byte[1<<10];
+        int i = 0;
+        byte[] encodedAck = encodeAck(ackFollowUserlist);
         String oneStringOfUsers = new String();
+        System.arraycopy(encodedAck,0,encodedBytes,i,encodedAck.length);
+        if(encodedAck.length!=4)
+            System.out.println("WR: encodedAck.length!=4");
+        i += 4;// Starts from 4 because the first 4 bytes used by Ack
         while (!ackFollowUserlist.getUserNameList().isEmpty()){
-            oneStringOfUsers = oneStringOfUsers + ackFollowUserlist.getUserNameList().remove(0);
+            oneStringOfUsers = oneStringOfUsers + ackFollowUserlist.getUserNameList().remove(0) +'\0';
         }
-        int i = 4;// Starts from 4 because the first 4 bytes used by Ack
         System.arraycopy(shortToBytes(ackFollowUserlist.getNumOfUsers()),0,encodedBytes,i,2);//The next 2 bytes are numOfUsers.
         i += 2;
         System.arraycopy(oneStringOfUsers.getBytes(),0,encodedBytes,i,oneStringOfUsers.getBytes().length);//The rest of the message
@@ -237,9 +239,12 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     }
 
     private byte[] encodeStat(AckStat ackStat){
-        byte[] encodedBytes = encodeAck(ackStat);
-        int i = 4;// Starts from 4 because the first 4 bytes used by Ack
-
+        byte[] encodedBytes = new byte[1 << 10];
+        int i =0 ;
+        System.arraycopy(shortToBytes(ackStat.getOpcode()),0,encodedBytes,i,2);
+        i += 2;// Starts from 4 because the first 4 bytes used by Ack
+        System.arraycopy(shortToBytes(ackStat.getOpcodeRespose()),0,encodedBytes,i,2);
+        i += 2;
         System.arraycopy(shortToBytes(ackStat.getNumOfPosts()),0,encodedBytes,i,2);//The next 2 bytes are numOfUsers.
         i += 2;
         System.arraycopy(shortToBytes(ackStat.getNumOfFollowers()),0,encodedBytes,i,2);
@@ -253,7 +258,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     @SuppressWarnings("Duplicates")
     private byte[] encodeAck(Ack ack){
         byte[] encodedBytes = new byte[1 << 10];
-        int i =0;
+        int i = 0;
         System.arraycopy(shortToBytes(ack.getOpcode()),0,encodedBytes,i,2);
         i += 2;
         System.arraycopy(shortToBytes(ack.getOpcodeRespose()),0,encodedBytes,i,2);
@@ -276,7 +281,7 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
         byte[] postingUserBytes = notification.getSendingUser().getBytes();
         System.arraycopy(postingUserBytes,0,encodedBytes,i,postingUserBytes.length);
         i += postingUserBytes.length;
-        char c = '\n';
+        char c = '\0';
         encodedBytes[i] = (byte)c;
         i++;
         //Content
