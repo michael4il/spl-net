@@ -335,18 +335,3 @@ public class EncDecServer implements MessageEncoderDecoder<Message> {
     }
 
 }
-
-
-/*    //TODO delete?
-    private String makeWhitespaces(String[] strings){
-        //code from Stack Over Flow
-        //from username BalusC
-        StringBuilder builder = new StringBuilder();
-        for (String string : strings) {
-            if (builder.length() > 0) {
-                builder.append(" ");
-            }
-            builder.append(string);
-        }
-        return builder.toString();
-    }*/
