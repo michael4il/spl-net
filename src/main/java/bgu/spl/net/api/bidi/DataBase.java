@@ -36,11 +36,11 @@ public class DataBase<T> {
         return timestampToT;
     }
 
-    public ConcurrentHashMap<String, Integer> getUsernameToId() {
+    public ConcurrentHashMap<String, Integer> nameToId() {
         return usernameToId;
     }
 
-    public ConcurrentHashMap<String, String> getUsernameToPassword() {
+    public ConcurrentHashMap<String, String> nameToPassword() {
         return usernameToPassword;
     }
 
@@ -48,7 +48,7 @@ public class DataBase<T> {
         return usernameToLogin;
     }
 
-    public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> getUsernameToWaitingT() {
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<T>> nameToWaitingT() {
         return usernameToWaitingT;
     }
 
@@ -56,11 +56,11 @@ public class DataBase<T> {
         return timeStamp;
     }
 
-    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> getWhoIfollow() {
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> whoIfollow() {
         return whoIfollow;
     }
 
-    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> getWhoFollowsMe() {
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> whoFollowsMe() {
         return whoFollowsMe;
     }
 

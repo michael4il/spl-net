@@ -17,24 +17,20 @@ public class TPCMain {
 
     public static void main(String[] args) throws IOException {
         DataBase dataBase = new DataBase();
-        String s = "@abc aaaa @df asd @@@@ ";
-        Scanner sc = new Scanner(s);
-        while ( sc.findInLine("@")!=null) {
-            System.out.println(sc.next());
-        }
-        sc.close();
+//        String s = "@abc aaaa @df asd @@@@ ";
+//        Scanner sc = new Scanner(s);
+//        while ( sc.findInLine("@")!=null) {
+//            System.out.println(sc.next());
+//        }
+//        sc.close();
 
-/*
+
         //server is T=message ,bidi protocol and enc dec is already message
         Server threadPerClient = Server.threadPerClient(7777,()-> new BidiMessagingProtocolImpl(dataBase),()->new EncDecServer());
         threadPerClient.serve();
-*/
+
     }
 }
-/*
-    String s = "LALA @Moses kdsfdf asdf @asdfkl ";
-    Scanner sc = new Scanner(s);
-        while ( sc.findInLine("@")!=null) {
-                System.out.println(sc.next());
-                }
-                sc.close();*/
+
+
+
