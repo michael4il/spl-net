@@ -11,8 +11,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     @Override
     public  boolean send(int connectionId, T msg) {
-        idToHandler.get(connectionId).send(msg);
-        return true;
+        if(idToHandler.containsKey(connectionId)) {
+            idToHandler.get(connectionId).send(msg);
+            return true;
+        }else return false;
     }
 
     @Override
@@ -21,10 +23,8 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     @Override
-    //Todo - check if we need to do logout in the Database.
-    //Probably not. already done.
-    //Sync
     public void disconnect(int connectionId) {
+        idToHandler.remove(connectionId);
     }
 
     //TODO the connectionImpl class will manage the id's

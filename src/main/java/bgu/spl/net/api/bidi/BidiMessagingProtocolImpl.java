@@ -52,38 +52,35 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //---------------------------------------------------------------REGISTER-----------------------------------------------------------------------
     private void processRegister(Register register) {
-        //Should be Sync on username
-        System.out.println("We entered the Register method in the protocol");
-        if (DB.nameToPassword().get(register.getUsername()) != null) {//means the name is already exist
-            ErrorMsg errorMsg = new ErrorMsg((short) 1);
-            connections.send(connectionId, errorMsg);
-        } else {
-            //The acts we do when a user Register
-            //Maybe this line is unnecessary
-            String newName = register.getUsername();
-            //Necessary
-            DB.nameToPassword().put(newName, register.getPassword());
-            DB.onlineUsers().put(newName, false);
-            DB.nameToWaitingT().put(newName, new ConcurrentLinkedQueue<>());
-            DB.getPrivateMsgOfUser().put(newName,new ConcurrentLinkedQueue<>());
-            DB.whoFollowsMe().put(newName, new ConcurrentLinkedQueue<>());
-            DB.whoIfollow().put(newName,new ConcurrentLinkedQueue<>());
-            DB.getPostsOfUser().put(newName,new ConcurrentLinkedQueue<>());
-            DB.getUsers().add(newName);
-            Ack ack = new Ack((short) 1);
-            connections.send(connectionId, ack);
+        synchronized (register.getUsername()) {
+            //Should be Sync on username
+            if (DB.nameToPassword().get(register.getUsername()) != null) {//means the name is already exist
+                ErrorMsg errorMsg = new ErrorMsg((short) 1);
+                connections.send(connectionId, errorMsg);
+            } else {
+                //The acts we do when a user Register
+                //Maybe this line is unnecessary
+                String newName = register.getUsername();
+                //Necessary
+                DB.nameToPassword().put(newName, register.getPassword());
+                DB.onlineUsers().put(newName, false);
+                DB.nameToWaitingT().put(newName, new ConcurrentLinkedQueue<>());
+                DB.getPrivateMsgOfUser().put(newName, new ConcurrentLinkedQueue<>());
+                DB.whoFollowsMe().put(newName, new ConcurrentLinkedQueue<>());
+                DB.whoIfollow().put(newName, new ConcurrentLinkedQueue<>());
+                DB.getPostsOfUser().put(newName, new ConcurrentLinkedQueue<>());
+                DB.getUsers().add(newName);
+                Ack ack = new Ack((short) 1);
+                connections.send(connectionId, ack);
+            }
         }
     }
 
     //-----------------------------------------------------------------LOGIN---------------------------------------------------------------
     private void processLogin(Login login) {
-        //TODO
-        System.out.println("We entered the Login method in the protocol");
         //Does the username exist?
         synchronized (login.getUsername()) {
             if ((DB.nameToPassword()).get(login.getUsername()) == null) {
-                System.out.println(login.getUsername());
-                System.out.println(DB.nameToPassword().get(login.getUsername()));
                 ErrorMsg errorMsg = new ErrorMsg((short) 2);
                 connections.send(connectionId, errorMsg);
             }//So the username exist.
@@ -98,7 +95,6 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
                     connections.send(connectionId, errorMsg);
                 } else {
                     //Good LOGIN~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    //TODO add getting the messages before
                     DB.nameToId().put(login.getUsername(),connectionId);
                     user = login.getUsername();
                     Ack ack = new Ack((short) 2);
@@ -114,7 +110,6 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //-------------------------------------------------------------------LOG OUT-------------------------------------------------------------------
     private void processLogout(Logout logout) {
-        System.out.println("We entered the Logout method in the protocol");
         if(user==null){
             connections.send(connectionId,new ErrorMsg((short)3));
         }else {
@@ -125,6 +120,7 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
                     DB.onlineUsers().replace(user, false);
                     Ack ack = new Ack((short) 3);
                     connections.send(connectionId, ack);
+                    connections.disconnect(connectionId);
                     shouldTerminate = true;
                 } else connections.send(connectionId, new ErrorMsg((short) 2));
             }
@@ -134,10 +130,6 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //---------------------------------------------------------------FOLLOW---------------------------------------------------------------------
     private void processFollow(Follow follow) {
-        System.out.println("We entered the Follow method in the protocol");
-        for (String username : follow.getUserlist()) {
-        }
-        System.out.println(follow.isFollow());
         if(user==null){
             connections.send(connectionId,new ErrorMsg((short)4));
         }else {
@@ -146,22 +138,22 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
             for (String followHim : follow.getUserlist()) {
                 if (follow.isFollow()) {
                     //do follow, change twice
-                    //check if followHim exist && check if we dont already follow him.
+                    //check if followHim exist && check if we don't already follow him.
                     if(DB.nameToPassword().get(followHim) != null && !DB.whoIfollow().get(user).contains(followHim)) {
                         DB.whoIfollow().get(user).add(followHim);
                         DB.whoFollowsMe().get(followHim).add(user);
                         successfulUsers.add(followHim);
                     }
                 } else {
-                    //check if followHim exist && check if we already don't follow him.
+                    //check if followHim exist && check if I follow him.
                     if (DB.nameToPassword().get(followHim) != null && DB.whoIfollow().get(user).contains(followHim)) {
                         ConcurrentLinkedQueue<String> iFollowThey = DB.whoIfollow().get(user);
                         for(String iFollowHim : iFollowThey){
                             //Comparing between users i follow and users that asked to be unfollow.
                             if(iFollowHim.equals(followHim)){
-                                iFollowThey.remove(iFollowHim);
-                                DB.whoFollowsMe().get(iFollowHim).remove(user);
-                                successfulUsers.add(iFollowHim);
+                                successfulUsers.add(followHim);
+                                DB.whoFollowsMe().get(followHim).remove(user);
+                                iFollowThey.remove(followHim);
                             }
                         }
                     }
@@ -191,7 +183,6 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
     }
 
     private void processPost(Post post) {
-        System.out.println("We entered the PM method in the protocol");
         if(user!=null) {
             char c = 1;
             Notification postNotification = new Notification(c, user, post.getContent());
@@ -216,28 +207,25 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //---------------------------------------------------------------PM---------------------------------------------------------------------
     private void processPM(PM pm) {
-        System.out.println("We entered the PM method in the protocol");
-        //TODO check if timestamp needed.
+        //if the I logged in and HE exist in the system.
         if(user != null && DB.nameToPassword().containsKey(pm.getUsername())) {
-            DB.getTimestampToT().put(0, pm);
-            Notification notification = new Notification('\0', user, pm.getContent());
-            if (DB.nameToId().get(pm.getUsername()) != null) {//other user exists
+            if (DB.nameToId().get(pm.getUsername()) != null) {//if HE exists
                 int idTosend = DB.nameToId().get(pm.getUsername());
                 //If the user logged in
                 synchronized (pm.getUsername()) {
                     if (DB.onlineUsers().get(pm.getUsername())) {
+                        //OK
+                        DB.getTimestampToT().put(0, pm);
+                        Notification notification = new Notification('\0', user, pm.getContent());
+                        DB.getPrivateMsgOfUser().get(user).add(notification);
+                        connections.send(connectionId, new Ack((short)6));
                         connections.send(idTosend, notification);
-                    } else {
-                        //the other user was not logged in
-                        connections.send(connectionId,new ErrorMsg((short)6));
-                        //DB.nameToWaitingT().get(pm.getUsername()).add(notification);
-                    }
-                    //Add the pm to the database
-                    DB.getPrivateMsgOfUser().get(user).add(notification);
-                    connections.send(connectionId, new Ack((short) 6));
+                        //HE not logged in.
+                    } else connections.send(connectionId, new ErrorMsg((short) 6));
                 }
-            }
-        }//we are not logged in.
+                //HE not exist
+            }else connections.send(connectionId,new ErrorMsg((short)6));
+        }//I am not logged in or not register
         else connections.send(connectionId,new ErrorMsg((short)6));
 
     }
@@ -261,7 +249,8 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
 
     //---------------------------------------------------------------STAT---------------------------------------------------------------------
     private void processStat(Stat stat) {
-        if(user == null){//the user that send is Logout
+        //I am Logout or He isn't exist
+        if(user == null || DB.nameToPassword().get(stat.getUsername())==null){
             connections.send(connectionId, new ErrorMsg((short)8));
         }else{
             //bring from the database the information.
@@ -281,9 +270,6 @@ public class BidiMessagingProtocolImpl implements BidiMessagingProtocol<Message>
         }
     }
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 
     private Vector<String> taggedPeople(String postContent){
         Vector<String> names = new Vector<>();
