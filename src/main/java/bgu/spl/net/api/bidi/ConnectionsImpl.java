@@ -1,16 +1,20 @@
 package bgu.spl.net.api.bidi;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionsImpl<T> implements Connections<T> {
-    private int counter=0;//need to be atomic
+/*
+    private AtomicInteger counter=new AtomicInteger(0);//be atomic
+*/
+    private int counter =0;
     private ConcurrentHashMap<Integer, ConnectionHandler> idToHandler =new ConcurrentHashMap<>();
 
 
     public ConnectionsImpl() {}
 
     @Override
-    public  boolean send(int connectionId, T msg) {
+    public boolean send(int connectionId, T msg) {
         if(idToHandler.containsKey(connectionId)) {
             idToHandler.get(connectionId).send(msg);
             return true;

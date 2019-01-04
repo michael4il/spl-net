@@ -46,7 +46,8 @@ public class BlockingConnectionHandler<T> implements Runnable, java.io.Closeable
             in = new BufferedInputStream(sock.getInputStream());
             out = new BufferedOutputStream(sock.getOutputStream());
 
-            protocol.start(connections.add(this),connections);
+                protocol.start(connections.add(this), connections);
+
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
                 T nextMessage = encdec.decodeNextByte((byte) read);
                 if (nextMessage != null) {
